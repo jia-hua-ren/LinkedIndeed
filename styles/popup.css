@@ -147,9 +147,12 @@ body {
   font-family: "DM Mono", monospace;
   font-size: 11px;
   color: var(--accent);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+/* always show full URL and allow wrapping */
+.url-text {
+  white-space: normal;
+  overflow: visible;
+  word-break: break-all;
 }
 .copy-btn {
   flex-shrink: 0;
