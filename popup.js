@@ -7,12 +7,26 @@ const SITE_LABELS = {
 };
 
 let jobInfo = null;
+let excelColumns = [];
+let excelColumnsSet = false;
+
+const DEFAULT_COLUMNS = ["company", "blank", "title", "salary", "rawUrl"];
+
+const COLUMN_OPTIONS = [
+  { val: "company", label: "Company" },
+  { val: "title", label: "Role / Title" },
+  { val: "location", label: "Location" },
+  { val: "salary", label: "Salary" },
+  { val: "cleanUrl", label: "Clean URL" },
+  { val: "rawUrl", label: "Raw URL" },
+  { val: "blank", label: "(Blank)" },
+];
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
   bindPanelEvents();
-  updateSavedCount();
+  await loadSettings();
   await loadCurrentJob();
 });
 
@@ -41,6 +55,10 @@ async function loadCurrentJob() {
 
 function renderUnsupported() {
   setPanel(`
+    <div class="tabs">
+      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
+      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
+    </div>
     <div class="unsupported">
       <div class="unsupported-icon">🔍</div>
       <h3>Not a supported job site</h3>
@@ -54,6 +72,10 @@ function renderUnsupported() {
 
 function renderNotAJobPage() {
   setPanel(`
+    <div class="tabs">
+      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
+      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
+    </div>
     <div class="unsupported">
       <div class="unsupported-icon">📄</div>
       <h3>No job listing detected</h3>
@@ -65,7 +87,7 @@ function renderNotAJobPage() {
 function renderSnapTab() {
   if (!jobInfo) return;
 
-  const { site, title, company, location, salary, cleanUrl } = jobInfo;
+  const { site, title, company, location, salary, cleanUrl, rawUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
 
   const locationHTML = location
@@ -84,9 +106,7 @@ function renderSnapTab() {
     </div>`
     : "";
 
-  const isSaved = isAlreadySaved(cleanUrl);
-
-  setPanel(`
+  const snapHtml = `
     <div id="snapView">
       <div class="job-card">
         <div class="site-badge">${escHTML(label)}</div>
@@ -97,23 +117,32 @@ function renderSnapTab() {
           ${salaryHTML}
         </div>
         <div class="url-row">
-          <div class="url-text" title="${escHTML(cleanUrl)}">${escHTML(cleanUrl)}</div>
+          <div class="url-text" title="${escHTML(rawUrl)}">${escHTML(cleanUrl || rawUrl)}</div>
           <button class="copy-btn" id="copyBtn" data-action="copy-current-url">Copy</button>
         </div>
+        <div style="margin-top:8px; display:flex; gap:8px;">
+          <button class="save-btn" data-action="copy-excel">Copy Excel</button>
+        </div>
       </div>
-
-      <button class="save-btn" id="saveBtn" data-action="save-job" ${isSaved ? "disabled" : ""}>
-        ${isSaved ? "✓ Already Saved" : "Save Job"}
-      </button>
     </div>
-  `);
+  `;
+
+  const tabs = `
+    <div class="tabs">
+      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
+      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
+    </div>
+  `;
+
+  setPanel(tabs + snapHtml);
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 function copyURL() {
   if (!jobInfo) return;
-  copyText(jobInfo.cleanUrl);
+  const toCopy = jobInfo.cleanUrl && jobInfo.cleanUrl.length ? jobInfo.cleanUrl : jobInfo.rawUrl || "";
+  copyText(toCopy);
   const btn = document.getElementById("copyBtn");
   if (btn) {
     btn.textContent = "Copied!";
@@ -127,44 +156,7 @@ function copyText(text) {
     .then(() => showToast("Copied to clipboard!"));
 }
 
-function saveJob() {
-  if (!jobInfo) return;
-  chrome.storage.local.get(["jobs"], ({ jobs }) => {
-    const list = jobs || [];
-    const entry = {
-      title: jobInfo.title,
-      company: jobInfo.company,
-      location: jobInfo.location,
-      salary: jobInfo.salary,
-      site: jobInfo.site,
-      cleanUrl: jobInfo.cleanUrl,
-      savedAt: Date.now(),
-    };
-    list.push(entry);
-    chrome.storage.local.set({ jobs: list }, () => {
-      showToast("Job saved! 🎉");
-      updateSavedCount();
-      const btn = document.getElementById("saveBtn");
-      if (btn) {
-        btn.textContent = "✓ Already Saved";
-        btn.disabled = true;
-      }
-    });
-  });
-}
-
-function isAlreadySaved(url) {
-  // Sync check not possible; we'll rely on async but default to false for UI speed
-  return false;
-}
-
-function updateSavedCount() {
-  chrome.storage.local.get(["jobs"], ({ jobs }) => {
-    const n = (jobs || []).length;
-    const el = document.getElementById("savedCount");
-    if (el) el.textContent = `${n} saved`;
-  });
-}
+// Save/list functionality removed
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -178,6 +170,7 @@ function bindPanelEvents() {
 
   panel.dataset.bound = "true";
   panel.addEventListener("click", handlePanelClick);
+  panel.addEventListener("change", handlePanelChange);
 }
 
 function handlePanelClick(event) {
@@ -192,8 +185,31 @@ function handlePanelClick(event) {
     case "copy-current-url":
       copyURL();
       break;
-    case "save-job":
-      saveJob();
+    case "copy-excel":
+      copyExcel();
+      break;
+    case "switch-tab":
+      const tab = actionEl.dataset.tab;
+      if (tab === "settings") renderSettingsTab();
+      else renderSnapTab();
+      // update active class on tabs
+      document
+        .querySelectorAll(".tab")
+        .forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
+      break;
+    case "add-col":
+      excelColumns.push("blank");
+      renderSettingsTab();
+      break;
+    case "remove-col":
+      const idx = parseInt(actionEl.dataset.index, 10);
+      if (!isNaN(idx)) {
+        excelColumns.splice(idx, 1);
+        renderSettingsTab();
+      }
+      break;
+    case "save-settings":
+      saveSettings().then(() => showToast("Settings saved"));
       break;
     case "copy-text":
       copyText(actionEl.dataset.text || "");
@@ -215,4 +231,110 @@ function escHTML(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// --- Settings / Excel helpers ---
+function renderSettingsTab() {
+  const cols = excelColumns.length ? excelColumns : DEFAULT_COLUMNS;
+
+  const rowsHtml = cols
+    .map((c, idx) => {
+      return `
+      <div class="setting-row" data-index="${idx}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+        <div style="flex:1;">
+          <select data-action="col-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
+            ${COLUMN_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === c ? "selected" : ""}>${o.label}</option>`).join("")}
+          </select>
+        </div>
+        <button class="icon-btn del" data-action="remove-col" data-index="${idx}">Remove</button>
+      </div>
+    `;
+    })
+    .join("");
+
+  const settingsHtml = `
+    <div id="settingsView">
+      <div style="margin-bottom:10px; color:var(--muted); font-size:12px;">Configure the columns for Excel/Sheets export. Use "(Blank)" to insert an empty column.</div>
+      <div id="colsList">${rowsHtml}</div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="icon-btn" data-action="add-col">Add Column</button>
+        <button class="save-btn" data-action="save-settings">Save Settings</button>
+      </div>
+    </div>
+  `;
+
+  const tabs = `
+    <div class="tabs">
+      <div class="tab" data-action="switch-tab" data-tab="snap">Snap</div>
+      <div class="tab active" data-action="switch-tab" data-tab="settings">Settings</div>
+    </div>
+  `;
+
+  setPanel(tabs + settingsHtml);
+}
+
+function copyExcel() {
+  if (!excelColumnsSet) {
+    showToast("Set Excel columns in Settings first.");
+    return;
+  }
+  if (!jobInfo) return;
+
+  const mapField = (key) => {
+    if (!key || key === "blank") return "";
+    switch (key) {
+      case "company":
+        return jobInfo.company || "";
+      case "title":
+        return jobInfo.title || "";
+      case "location":
+        return jobInfo.location || "";
+      case "salary":
+        return jobInfo.salary || "";
+      case "cleanUrl":
+        return jobInfo.cleanUrl || "";
+      case "rawUrl":
+        return jobInfo.rawUrl || "";
+      default:
+        return "";
+    }
+  };
+
+  const row = excelColumns.map(mapField).join("\t");
+  copyText(row);
+  showToast("Copied Excel row to clipboard!");
+}
+
+function handlePanelChange(e) {
+  const el = e.target;
+  if (!el || !el.dataset) return;
+  const action = el.dataset.action;
+  if (action === "col-change") {
+    const idx = parseInt(el.dataset.index, 10);
+    if (!isNaN(idx)) {
+      excelColumns[idx] = el.value;
+    }
+  }
+}
+
+function loadSettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["excelColumns", "excelColumnsSet"], (res) => {
+      excelColumns =
+        Array.isArray(res.excelColumns) && res.excelColumns.length
+          ? res.excelColumns
+          : DEFAULT_COLUMNS.slice();
+      excelColumnsSet = !!res.excelColumnsSet;
+      resolve();
+    });
+  });
+}
+
+function saveSettings() {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ excelColumns, excelColumnsSet: true }, () => {
+      excelColumnsSet = true;
+      resolve();
+    });
+  });
 }

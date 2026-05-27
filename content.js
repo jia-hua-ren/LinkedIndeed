@@ -39,31 +39,11 @@
         break;
       }
       // other sites fall through to the generic fallback
-      // other sites fall through to the generic fallback
     }
 
-    // Fallback: strip common tracking params
-    const trackingParams = [
-      "utm_source",
-      "utm_medium",
-      "utm_campaign",
-      "utm_term",
-      "utm_content",
-      "ref",
-      "refid",
-      "trk",
-      "trkCode",
-      "trkInfo",
-      "sal",
-      "from",
-      "advn",
-      "adid",
-      "tk",
-      "hl",
-      "jsa",
-    ];
-    trackingParams.forEach((p) => url.searchParams.delete(p));
-    return url.toString();
+    // If site is not specially handled above, return an empty string
+    // (we only produce cleaned URLs for known sites)
+    return "";
   }
 
   function q(selector) {
@@ -74,7 +54,7 @@
   function extractJobInfo(site) {
     let title = null,
       company = null,
-      location = null,
+      jobLocation = null,
       salary = null;
 
     switch (site) {
@@ -88,7 +68,7 @@
           q('[data-testid="inlineHeader-companyName"]') ||
           q(".jobsearch-InlineCompanyRating-companyName") ||
           q('[data-company-name="true"]');
-        location =
+        jobLocation =
           q('[data-testid="job-location"]') ||
           q(".jobsearch-JobInfoHeader-subtitle > div:last-child");
         salary =
@@ -106,7 +86,7 @@
           q(".job-details-jobs-unified-top-card__company-name") ||
           q(".jobs-unified-top-card__company-name a") ||
           q(".jobs-unified-top-card__subtitle-primary-grouping a");
-        location =
+        jobLocation =
           q(".job-details-jobs-unified-top-card__bullet") ||
           q(".jobs-unified-top-card__bullet") ||
           q(".jobs-unified-top-card__workplace-type");
@@ -120,17 +100,16 @@
 
       // Other sites are not specially handled and will fall back to generic heuristics
 
-      // Other sites are not specially handled and will fall back to generic heuristics
     }
 
     return {
       site,
       title: title || document.title || null,
       company: company || null,
-      location: location || null,
+      location: jobLocation || null,
       salary: salary || null,
       cleanUrl: cleanURL(site),
-      rawUrl: location.href,
+      rawUrl: window.location.href,
     };
   }
 })();
