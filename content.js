@@ -128,10 +128,12 @@
         jobLocation =
           q('[class*="location"]') || q(".location") || q(".job-location");
         // Prefer the paragraph with class "body" inside .pay-range
-        const payEl = document.querySelector('.pay-range');
+        const payEl = document.querySelector(".pay-range");
         if (payEl) {
           // Prefer the plain `p.body` (exclude `p.body.body--medium`)
-          const p = payEl.querySelector('p.body:not(.body--medium)') || payEl.querySelector('p.body');
+          const p =
+            payEl.querySelector("p.body:not(.body--medium)") ||
+            payEl.querySelector("p.body");
           if (p) salary = p.innerText.trim();
         }
         break;
@@ -146,7 +148,6 @@
       location: jobLocation || null,
       salary: salary || null,
       cleanUrl: cleanURL(site),
-      rawUrl: window.location.href,
     };
   }
 })();
