@@ -93,17 +93,42 @@
 
       case "linkedin":
         title =
+          (() => {
+            const paddingEl = document.querySelector(
+              "div._9449c08b.ada36d68._9fcd086c.f7a29ebc.f28d050d.e508c506",
+            );
+            const titleContainer =
+              paddingEl && paddingEl.previousElementSibling;
+            if (titleContainer) {
+              const text = titleContainer.innerText
+                ? titleContainer.innerText.trim()
+                : "";
+              if (text) return text;
+            }
+            return null;
+          })() ||
           q(".job-details-jobs-unified-top-card__job-title h1") ||
           q(".jobs-unified-top-card__job-title") ||
           q("h1.t-24");
         company =
+          (() => {
+            const companyEl = document.querySelector(
+              'div[aria-label^="Company, "]',
+            );
+            if (companyEl) {
+              const label = companyEl.getAttribute("aria-label") || "";
+              const name = label
+                .replace(/^Company,\s*/, "")
+                .trim()
+                .replace(/\.$/, "");
+              if (name) return name;
+            }
+            return null;
+          })() ||
           q(".job-details-jobs-unified-top-card__company-name") ||
           q(".jobs-unified-top-card__company-name a") ||
           q(".jobs-unified-top-card__subtitle-primary-grouping a");
-        jobLocation =
-          q(".job-details-jobs-unified-top-card__bullet") ||
-          q(".jobs-unified-top-card__bullet") ||
-          q(".jobs-unified-top-card__workplace-type");
+        jobLocation = "";
         salary =
           q(
             ".job-details-jobs-unified-top-card__job-insight--highlight span",
@@ -137,8 +162,6 @@
           if (p) salary = p.innerText.trim();
         }
         break;
-
-      // Other sites are not specially handled and will fall back to generic heuristics
     }
 
     return {
