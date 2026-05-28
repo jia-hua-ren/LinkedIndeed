@@ -13,10 +13,22 @@
   });
 
   function detectSite() {
-    const host = location.hostname;
-    if (host.includes("indeed.com")) return "indeed";
-    if (host.includes("linkedin.com")) return "linkedin";
-    if (host.includes("greenhouse.io")) return "greenhouse";
+    const url = new URL(location.href);
+
+    if (
+      url.origin === "https://www.indeed.com" &&
+      url.pathname.startsWith("/viewjob")
+    )
+      return "indeed";
+
+    if (
+      url.origin === "https://www.linkedin.com" &&
+      url.pathname.startsWith("/jobs/view/")
+    )
+      return "linkedin";
+
+    if (url.hostname === "job-boards.greenhouse.io") return "greenhouse";
+
     return "unknown";
   }
 

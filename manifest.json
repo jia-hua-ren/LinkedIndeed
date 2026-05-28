@@ -5,9 +5,9 @@
   "description": "Linked, Indeed! — save job listings with clean URLs and extracted details from Indeed, LinkedIn, and more.",
   "permissions": ["activeTab", "storage", "clipboardWrite"],
   "host_permissions": [
-    "https://www.indeed.com/*",
-    "https://www.linkedin.com/*",
-    "https://*.greenhouse.io/*"
+    "https://www.indeed.com/viewjob*",
+    "https://www.linkedin.com/jobs/view/*",
+    "https://job-boards.greenhouse.io/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -19,7 +19,11 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.indeed.com/*", "https://www.linkedin.com/*", "https://*.greenhouse.io/*"],
+      "matches": [
+        "https://www.indeed.com/viewjob*",
+        "https://www.linkedin.com/jobs/view/*",
+        "https://job-boards.greenhouse.io/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

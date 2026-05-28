@@ -31,6 +31,38 @@ const DATE_FORMAT_OPTIONS = [
   { val: "YYYY-MM-DD", label: "yyyy-mm-dd" },
 ];
 
+function isIndeedJobUrl(url) {
+  return (
+    url.origin === "https://www.indeed.com" &&
+    url.pathname.startsWith("/viewjob")
+  );
+}
+
+function isLinkedInJobUrl(url) {
+  return (
+    url.origin === "https://www.linkedin.com" &&
+    url.pathname.startsWith("/jobs/view/")
+  );
+}
+
+function isGreenhouseJobUrl(url) {
+  return url.hostname === "job-boards.greenhouse.io";
+}
+
+function isSupportedJobUrl(url) {
+  return (
+    isIndeedJobUrl(url) || isLinkedInJobUrl(url) || isGreenhouseJobUrl(url)
+  );
+}
+
+function isSupportedJobSite(url) {
+  return (
+    url.origin === "https://www.indeed.com" ||
+    url.origin === "https://www.linkedin.com" ||
+    url.hostname.endsWith("greenhouse.io")
+  );
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -42,12 +74,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadCurrentJob() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = new URL(tab.url);
-  const host = url.hostname;
 
-  const isSupported = SUPPORTED_SITES.some((s) => host.includes(s));
-
-  if (!isSupported) {
+  if (!isSupportedJobSite(url)) {
     renderUnsupported();
+    return;
+  }
+
+  if (!isSupportedJobUrl(url)) {
+    renderNotAJobPage();
     return;
   }
 
@@ -86,9 +120,8 @@ function renderNotAJobPage() {
       <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
     </div>
     <div class="unsupported">
-      <div class="unsupported-icon">📄</div>
-      <h3>No job listing detected</h3>
-      <p>Open an individual job listing page and try again.</p>
+      <h3>Please open a job post directly</h3>
+      <p>Happy Job Applying! From a listings page, Ctrl/Cmd-click the job or right-click and open it in a new tab.</p>
     </div>
   `);
 }
