@@ -18,8 +18,17 @@ const COLUMN_OPTIONS = [
   { val: "title", label: "Role / Title" },
   { val: "location", label: "Location" },
   { val: "salary", label: "Salary" },
+  { val: "date", label: "Date" },
   { val: "cleanUrl", label: "Clean URL" },
   { val: "blank", label: "(Blank)" },
+];
+
+let dateFormats = {}; // map column index -> format string
+
+const DATE_FORMAT_OPTIONS = [
+  { val: "MM/DD/YYYY", label: "mm/dd/yyyy" },
+  { val: "DD/MM/YYYY", label: "dd/mm/yyyy" },
+  { val: "YYYY-MM-DD", label: "yyyy-mm-dd" },
 ];
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -141,7 +150,10 @@ function renderSnapTab() {
 
 function copyURL() {
   if (!jobInfo) return;
-  const toCopy = jobInfo.cleanUrl && jobInfo.cleanUrl.length ? jobInfo.cleanUrl : jobInfo.rawUrl || "";
+  const toCopy =
+    jobInfo.cleanUrl && jobInfo.cleanUrl.length
+      ? jobInfo.cleanUrl
+      : jobInfo.rawUrl || "";
   copyText(toCopy);
   const btn = document.getElementById("copyBtn");
   if (btn) {
@@ -197,6 +209,17 @@ function handlePanelClick(event) {
         .querySelectorAll(".tab")
         .forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
       break;
+    case "toggle-date-more":
+      const di = parseInt(actionEl.dataset.index, 10);
+      if (!isNaN(di)) {
+        const optionsEl = document.querySelector(
+          `.date-options[data-index="${di}"]`,
+        );
+        if (optionsEl)
+          optionsEl.style.display =
+            optionsEl.style.display === "none" ? "block" : "none";
+      }
+      break;
     case "add-col":
       excelColumns.push("blank");
       renderSettingsTab();
@@ -239,14 +262,34 @@ function renderSettingsTab() {
 
   const rowsHtml = cols
     .map((c, idx) => {
+      const isDate = c === "date";
+      const currentFormat = dateFormats[idx] || "MM/DD/YYYY";
+      const inlineMoreBtnHtml = isDate
+        ? `<button class="icon-btn more" data-action="toggle-date-more" data-index="${idx}" style="margin-left:6px;">more...</button>`
+        : "";
+      const dateOptionsHtml = isDate
+        ? `
+          <div class="date-options" data-index="${idx}" style="display:none; margin-top:6px;">
+            <label style="font-size:12px; color:var(--muted); margin-bottom:6px; display:block;">Date format. This is Today's date.</label>
+            <select data-action="date-format-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
+              ${DATE_FORMAT_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === currentFormat ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
+          </div>
+        `
+        : "";
+
       return `
-      <div class="setting-row" data-index="${idx}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-        <div style="flex:1;">
-          <select data-action="col-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
-            ${COLUMN_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === c ? "selected" : ""}>${o.label}</option>`).join("")}
-          </select>
+      <div class="setting-row" data-index="${idx}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-direction:column; align-items:stretch;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div style="flex:1; min-width:0;">
+            <select data-action="col-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
+              ${COLUMN_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === c ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
+          </div>
+          ${inlineMoreBtnHtml}
+          <button class="icon-btn del" data-action="remove-col" data-index="${idx}" style="margin-left:4px;">Remove</button>
         </div>
-        <button class="icon-btn del" data-action="remove-col" data-index="${idx}">Remove</button>
+        ${dateOptionsHtml}
       </div>
     `;
     })
@@ -279,8 +322,7 @@ function copyExcel() {
     return;
   }
   if (!jobInfo) return;
-
-  const mapField = (key) => {
+  const mapField = (key, idx) => {
     if (!key || key === "blank") return "";
     switch (key) {
       case "company":
@@ -293,14 +335,28 @@ function copyExcel() {
         return jobInfo.salary || "";
       case "cleanUrl":
         return jobInfo.cleanUrl || "";
+      case "date": {
+        const fmt = dateFormats[idx] || "MM/DD/YYYY";
+        return formatDate(new Date(), fmt);
+      }
       default:
         return "";
     }
   };
 
-  const row = excelColumns.map(mapField).join("\t");
+  const row = excelColumns.map((k, i) => mapField(k, i)).join("\t");
   copyText(row);
   showToast("Copied Excel row to clipboard!");
+}
+
+function formatDate(d, fmt) {
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = String(d.getFullYear());
+  if (fmt === "DD/MM/YYYY") return `${dd}/${mm}/${yyyy}`;
+  if (fmt === "YYYY-MM-DD") return `${yyyy}-${mm}-${dd}`;
+  // default MM/DD/YYYY
+  return `${mm}/${dd}/${yyyy}`;
 }
 
 function handlePanelChange(e) {
@@ -311,27 +367,46 @@ function handlePanelChange(e) {
     const idx = parseInt(el.dataset.index, 10);
     if (!isNaN(idx)) {
       excelColumns[idx] = el.value;
+      // Re-render settings so that newly-selected "date" columns show their "more..." UI immediately
+      renderSettingsTab();
+    }
+  }
+  if (action === "date-format-change") {
+    const idx = parseInt(el.dataset.index, 10);
+    if (!isNaN(idx)) {
+      dateFormats[idx] = el.value;
     }
   }
 }
 
 function loadSettings() {
   return new Promise((resolve) => {
-    chrome.storage.local.get(["excelColumns", "excelColumnsSet"], (res) => {
+    chrome.storage.local.get(
+      ["excelColumns", "excelColumnsSet", "dateFormats"],
+      (res) => {
         // sanitize stored columns: replace or remove deprecated "rawUrl"
-        let stored = Array.isArray(res.excelColumns) ? res.excelColumns.map(c => c === 'rawUrl' ? 'cleanUrl' : c).filter(Boolean) : [];
+        let stored = Array.isArray(res.excelColumns)
+          ? res.excelColumns
+              .map((c) => (c === "rawUrl" ? "cleanUrl" : c))
+              .filter(Boolean)
+          : [];
         excelColumns = stored.length ? stored : DEFAULT_COLUMNS.slice();
-      excelColumnsSet = !!res.excelColumnsSet;
-      resolve();
-    });
+        excelColumnsSet = !!res.excelColumnsSet;
+        dateFormats = res.dateFormats || {};
+        resolve();
+      },
+    );
   });
 }
 
 function saveSettings() {
   return new Promise((resolve) => {
-    chrome.storage.local.set({ excelColumns, excelColumnsSet: true }, () => {
-      excelColumnsSet = true;
-      resolve();
-    });
+    chrome.storage.local.set(
+      { excelColumns, excelColumnsSet: true, dateFormats },
+      () => {
+        excelColumnsSet = true;
+        resolve();
+      },
+    );
   });
 }
