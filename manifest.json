@@ -6,7 +6,8 @@
   "permissions": ["activeTab", "storage", "clipboardWrite"],
   "host_permissions": [
     "https://www.indeed.com/*",
-    "https://www.linkedin.com/*"
+    "https://www.linkedin.com/*",
+    "https://*.greenhouse.io/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -18,7 +19,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.indeed.com/*", "https://www.linkedin.com/*"],
+      "matches": ["https://www.indeed.com/*", "https://www.linkedin.com/*", "https://*.greenhouse.io/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }

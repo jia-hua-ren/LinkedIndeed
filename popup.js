@@ -1,16 +1,17 @@
 // popup.js — Linked, Indeed! popup logic
 
-const SUPPORTED_SITES = ["indeed", "linkedin"];
+const SUPPORTED_SITES = ["indeed", "linkedin", "greenhouse"];
 const SITE_LABELS = {
   indeed: "Indeed",
   linkedin: "LinkedIn",
+  greenhouse: "Greenhouse",
 };
 
 let jobInfo = null;
 let excelColumns = [];
 let excelColumnsSet = false;
 
-const DEFAULT_COLUMNS = ["company", "blank", "title", "salary", "rawUrl"];
+const DEFAULT_COLUMNS = ["company", "blank", "title", "salary", "cleanUrl"];
 
 const COLUMN_OPTIONS = [
   { val: "company", label: "Company" },
@@ -18,7 +19,6 @@ const COLUMN_OPTIONS = [
   { val: "location", label: "Location" },
   { val: "salary", label: "Salary" },
   { val: "cleanUrl", label: "Clean URL" },
-  { val: "rawUrl", label: "Raw URL" },
   { val: "blank", label: "(Blank)" },
 ];
 
@@ -293,8 +293,6 @@ function copyExcel() {
         return jobInfo.salary || "";
       case "cleanUrl":
         return jobInfo.cleanUrl || "";
-      case "rawUrl":
-        return jobInfo.rawUrl || "";
       default:
         return "";
     }
@@ -320,10 +318,9 @@ function handlePanelChange(e) {
 function loadSettings() {
   return new Promise((resolve) => {
     chrome.storage.local.get(["excelColumns", "excelColumnsSet"], (res) => {
-      excelColumns =
-        Array.isArray(res.excelColumns) && res.excelColumns.length
-          ? res.excelColumns
-          : DEFAULT_COLUMNS.slice();
+        // sanitize stored columns: replace or remove deprecated "rawUrl"
+        let stored = Array.isArray(res.excelColumns) ? res.excelColumns.map(c => c === 'rawUrl' ? 'cleanUrl' : c).filter(Boolean) : [];
+        excelColumns = stored.length ? stored : DEFAULT_COLUMNS.slice();
       excelColumnsSet = !!res.excelColumnsSet;
       resolve();
     });

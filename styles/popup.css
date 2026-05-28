@@ -110,10 +110,8 @@ body {
   margin-bottom: 3px;
 }
 .job-meta {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
+  display: block;
+  margin-top: 8px;
 }
 .meta-item {
   font-size: 11px;
@@ -121,7 +119,8 @@ body {
   font-family: "DM Mono", monospace;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  margin-top: 6px;
 }
 .meta-item svg {
   flex-shrink: 0;
