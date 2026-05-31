@@ -44,17 +44,77 @@ function isLinkedInJobUrl(url) {
     url.pathname.startsWith("/jobs/view/")
   );
 }
+// Initialize UI and load state when the popup DOM is ready.
+document.addEventListener("DOMContentLoaded", async () => {
+  bindPanelEvents();
+  await loadSettings();
+  await loadCurrentJob();
+});
+/**
+ * isIndeedJobUrl(url)
+ * Check whether a URL points to an Indeed job page.
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
+function isIndeedJobUrl(url) {
+  return (
+    url.origin === "https://www.indeed.com" &&
+    url.pathname.startsWith("/viewjob")
+  );
+}
 
+/**
+ * isLinkedInJobUrl(url)
+ * Check whether a URL points to a LinkedIn job page.
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
+function isLinkedInJobUrl(url) {
+  return (
+    url.origin === "https://www.linkedin.com" &&
+    url.pathname.startsWith("/jobs/view/")
+  );
+}
+
+/**
+ * isGreenhouseJobUrl(url)
+ * Check whether a URL is the Greenhouse job-boards host.
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
 function isGreenhouseJobUrl(url) {
   return url.hostname === "job-boards.greenhouse.io";
 }
 
+/**
+ * isSupportedJobUrl(url)
+ * Check if a URL is one of the exact job-page URL patterns we support.
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
 function isSupportedJobUrl(url) {
   return (
     isIndeedJobUrl(url) || isLinkedInJobUrl(url) || isGreenhouseJobUrl(url)
   );
 }
 
+/**
+ * isSupportedJobSite(url)
+ * Looser check to determine if the current origin belongs to a supported
+ * site family (used to distinguish unrelated sites from listing pages).
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
 function isSupportedJobSite(url) {
   return (
     url.origin === "https://www.indeed.com" ||
@@ -63,14 +123,20 @@ function isSupportedJobSite(url) {
   );
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-
-document.addEventListener("DOMContentLoaded", async () => {
-  bindPanelEvents();
-  await loadSettings();
-  await loadCurrentJob();
-});
-
+/**
+ * getGenericJobHint()
+ * Return the generic instruction message shown on listing/result pages.
+ *
+ * Returns: string
+ */
+function getGenericJobHint() {
+  return "Open a job post directly. From a listings page, Ctrl/Cmd-click the job or right-click and open it in a new tab.";
+}
+/**
+ * loadCurrentJob()
+ * Query the active tab, determine whether it's a supported job URL, and
+ * either request job info from the content script or render a helpful panel.
+ */
 async function loadCurrentJob() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = new URL(tab.url);
@@ -81,7 +147,7 @@ async function loadCurrentJob() {
   }
 
   if (!isSupportedJobUrl(url)) {
-    renderNotAJobPage();
+    renderNotAJobPage(getGenericJobHint());
     return;
   }
 
@@ -90,7 +156,7 @@ async function loadCurrentJob() {
     renderSnapTab();
   } catch (e) {
     // Content script may not have loaded yet (e.g. on a search results page)
-    renderNotAJobPage();
+    renderNotAJobPage(getGenericJobHint());
   }
 }
 

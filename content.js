@@ -6,12 +6,22 @@
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === "getJobInfo") {
-      const info = extractJobInfo(site);
+      const info = extractJobInfo();
       sendResponse(info);
     }
     return true;
   });
 
+  /**
+   * Determines which supported site the current page represents based on the
+   * location URL. This only returns a valid result if the site is a URL to a
+   * specific job post on a supported platform (e.g. if on Indeed homepage only,
+   * which has no job info, it would not return 'indeed').
+   *
+   * Returns one of: 'indeed', 'linkedin', 'greenhouse', or 'unknown'.
+   *
+   * No parameters — reads `location.href`.
+   */
   function detectSite() {
     const url = new URL(location.href);
 
@@ -32,7 +42,17 @@
     return "unknown";
   }
 
-  function cleanURL(site) {
+  /**
+   * Shortens the URL to the job post page by stripping unnecessary query
+   * parameters, keeping only the necessary one (often some form of
+   * jobkey or jobid)
+   *
+   * No parameters - reads `location.href` and `site` variable.
+   *
+   * Returns a string containing the canonical URL, or an empty string when no
+   * canonical form can be determined.
+   */
+  function cleanURL() {
     const url = new URL(location.href);
 
     switch (site) {
@@ -65,19 +85,74 @@
     return "";
   }
 
+  /**
+   * Simple shorthand for `document.querySelector` that returns the visible
+   * trimmed text of the first matching element, or null when not found.
+   *
+   * Parameters:
+   *  - selector: string - CSS selector passed to `querySelector`.
+   *
+   * Returns: string|null
+   */
   function q(selector) {
     const el = document.querySelector(selector);
     return el ? el.innerText.trim() : null;
   }
 
-  function meta(prop) {
-    const m =
-      document.querySelector(`meta[property="${prop}"]`) ||
-      document.querySelector(`meta[name="${prop}"]`);
-    return m ? m.content : null;
+  /**
+   * extractLogoAltText()
+   * Find the logo image inside the job post container and return its alt text
+   * with any trailing "Logo" suffix removed.
+   *
+   * No parameters — reads the current DOM.
+   *
+   * Returns: string|null
+   */
+  function greenhouseExtractLogoAltCompanyText() {
+    const container = document.querySelector(
+      "div.job-post-container div.image-container",
+    );
+    if (!container) return null;
+
+    const img = container.querySelector("img");
+    if (!img) return null;
+
+    const alt = (img.getAttribute("alt") || "").trim();
+    if (!alt) return null;
+
+    return alt.replace(/\s*Logo$/, "").trim() || null;
   }
 
-  function extractJobInfo(site) {
+  /**
+   * greenhouseExtractCompanyFromURL()
+   * Derive a Greenhouse company name from the current pathname when the page
+   * doesn't expose a cleaner company label in the DOM.
+   *
+   * No parameters — reads `location.pathname`.
+   *
+   * Returns: string|null
+   */
+  function greenhouseExtractCompanyFromURL() {
+    const p = location.pathname.split("/").filter(Boolean);
+    if (p.length && p[0] !== "jobs") {
+      return decodeURIComponent(p[0]).replace(/-/g, " ");
+    }
+    return null;
+  }
+
+  /**
+   * Attempt to extract visible job fields from the page DOM. Each site has
+   * its own heuristics and fallbacks. The function returns an object with
+   * fields `{ site, title, company, location, salary, cleanUrl }` where
+   * missing fields are `null`.
+   *
+   * No parameters — reads `site` variable and the DOM.
+   *
+   * TODO: make each job site extraction independent functions for easier maintenance and testing.
+   *
+   * Returns: Object {site, title, company, location, salary, cleanUrl}
+   */
+  function extractJobInfo() {
     let title = null,
       company = null,
       jobLocation = null,
@@ -87,20 +162,12 @@
       case "indeed":
         title =
           q('[data-testid="jobsearch-JobInfoHeader-title"]') ||
-          q(".jobsearch-JobInfoHeader-title") ||
-          q("h1.jobTitle") ||
-          q("h1");
+          q(".jobsearch-JobInfoHeader-title");
         company =
           q('[data-testid="inlineHeader-companyName"]') ||
-          q(".jobsearch-InlineCompanyRating-companyName") ||
           q('[data-company-name="true"]');
-        jobLocation =
-          q('[data-testid="job-location"]') ||
-          q(".jobsearch-JobInfoHeader-subtitle > div:last-child");
-        salary =
-          q('[data-testid="attribute_snippet_testid"]') ||
-          q(".jobsearch-JobMetadataHeader-item") ||
-          q("#salaryInfoAndJobType span");
+        jobLocation = q('[data-testid="inlineHeader-companyLocation"]');
+        salary = q("#salaryInfoAndJobType span");
         break;
 
       case "linkedin":
@@ -153,15 +220,8 @@
         title =
           q("h1.job-title") || q("h1") || q(".opening-title") || document.title;
         company =
-          q(".company") ||
-          q(".company-name") ||
-          meta("og:site_name") ||
-          (() => {
-            const p = location.pathname.split("/").filter(Boolean);
-            if (p.length && p[0] !== "jobs")
-              return decodeURIComponent(p[0]).replace(/-/g, " ");
-            return null;
-          })();
+          greenhouseExtractLogoAltCompanyText() ||
+          greenhouseExtractCompanyFromURL();
         jobLocation =
           q('[class*="location"]') || q(".location") || q(".job-location");
         // Prefer the paragraph with class "body" inside .pay-range
@@ -182,7 +242,7 @@
       company: company || null,
       location: jobLocation || null,
       salary: salary || null,
-      cleanUrl: cleanURL(site),
+      cleanUrl: cleanURL(),
     };
   }
 })();
