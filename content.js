@@ -103,6 +103,28 @@
   }
 
   /**
+   * linkedinExtractSalaryText()
+   * Look for LinkedIn salary divs with the exact class pattern requested and
+   * return the first one whose visible text contains a digit.
+   *
+   * No parameters — reads the current DOM.
+   *
+   * Returns: string|null
+   */
+  function linkedinExtractSalaryText() {
+    const salaryDivs = document.querySelectorAll(
+      "div.a2b56a91._2109e95f._15b3c506.c032b77a",
+    );
+
+    for (const div of salaryDivs) {
+      const text = (div.innerText || "").trim();
+      if (text && /\d/.test(text)) return text;
+    }
+
+    return null;
+  }
+
+  /**
    * Find the logo image inside the job post container and return its alt text
    * with any trailing "Logo" suffix removed. This is a greenhouse specific
    * parameter which has the clean company name in the alt text
@@ -208,7 +230,7 @@
           return null;
         })();
         jobLocation = "";
-        salary = "";
+        salary = linkedinExtractSalaryText();
         break;
 
       case "greenhouse":
