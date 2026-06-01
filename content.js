@@ -56,6 +56,9 @@
     const url = new URL(location.href);
 
     switch (site) {
+      case "unknown": {
+        return "";
+      }
       case "indeed": {
         // Indeed job key: ?jk=XXXX is all you need
         const jk = url.searchParams.get("jk");
@@ -100,9 +103,10 @@
   }
 
   /**
-   * extractLogoAltText()
    * Find the logo image inside the job post container and return its alt text
-   * with any trailing "Logo" suffix removed.
+   * with any trailing "Logo" suffix removed. This is a greenhouse specific
+   * parameter which has the clean company name in the alt text
+   * (e.g. "XXX Company Logo").
    *
    * No parameters — reads the current DOM.
    *
@@ -124,9 +128,13 @@
   }
 
   /**
-   * greenhouseExtractCompanyFromURL()
-   * Derive a Greenhouse company name from the current pathname when the page
-   * doesn't expose a cleaner company label in the DOM.
+   * Derive a Greenhouse company name from the current URL pathname when the page
+   * doesn't expose a cleaner company label in the DOM. This is often not a clean
+   * company name (e.g. "acmeinc" vs. "Acme Inc.") but often the only option if
+   * there is no logo present on the job page.
+   *
+   * The URL is usually: `https://job-boards.greenhouse.io/<company-name>/jobs/<job-id>`,
+   * so it extracts <company-name>.
    *
    * No parameters — reads `location.pathname`.
    *
@@ -149,7 +157,7 @@
    * No parameters — reads `site` variable and the DOM.
    *
    * TODO: make each job site extraction independent functions for easier maintenance and testing.
-   *
+   * TODO: fix linkedin extraction
    * Returns: Object {site, title, company, location, salary, cleanUrl}
    */
   function extractJobInfo() {
@@ -170,50 +178,37 @@
         salary = q("#salaryInfoAndJobType span");
         break;
 
+      /* LinkedIn is the worst for this because they don't have real class names */
       case "linkedin":
-        title =
-          (() => {
-            const paddingEl = document.querySelector(
-              "div._9449c08b.ada36d68._9fcd086c.f7a29ebc.f28d050d.e508c506",
-            );
-            const titleContainer =
-              paddingEl && paddingEl.previousElementSibling;
-            if (titleContainer) {
-              const text = titleContainer.innerText
-                ? titleContainer.innerText.trim()
-                : "";
-              if (text) return text;
-            }
-            return null;
-          })() ||
-          q(".job-details-jobs-unified-top-card__job-title h1") ||
-          q(".jobs-unified-top-card__job-title") ||
-          q("h1.t-24");
-        company =
-          (() => {
-            const companyEl = document.querySelector(
-              'div[aria-label^="Company, "]',
-            );
-            if (companyEl) {
-              const label = companyEl.getAttribute("aria-label") || "";
-              const name = label
-                .replace(/^Company,\s*/, "")
-                .trim()
-                .replace(/\.$/, "");
-              if (name) return name;
-            }
-            return null;
-          })() ||
-          q(".job-details-jobs-unified-top-card__company-name") ||
-          q(".jobs-unified-top-card__company-name a") ||
-          q(".jobs-unified-top-card__subtitle-primary-grouping a");
+        title = (() => {
+          const paddingEl = document.querySelector(
+            "div._9449c08b.ada36d68._9fcd086c.f7a29ebc.f28d050d.e508c506",
+          );
+          const titleContainer = paddingEl && paddingEl.previousElementSibling;
+          if (titleContainer) {
+            const text = titleContainer.innerText
+              ? titleContainer.innerText.trim()
+              : "";
+            if (text) return text;
+          }
+          return null;
+        })();
+        company = (() => {
+          const companyEl = document.querySelector(
+            'div[aria-label^="Company, "]',
+          );
+          if (companyEl) {
+            const label = companyEl.getAttribute("aria-label") || "";
+            const name = label
+              .replace(/^Company,\s*/, "")
+              .trim()
+              .replace(/\.$/, "");
+            if (name) return name;
+          }
+          return null;
+        })();
         jobLocation = "";
-        salary =
-          q(
-            ".job-details-jobs-unified-top-card__job-insight--highlight span",
-          ) ||
-          q(".jobs-unified-top-card__job-insight span") ||
-          q('[class*="salary"]');
+        salary = "";
         break;
 
       case "greenhouse":

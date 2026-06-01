@@ -51,7 +51,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadCurrentJob();
 });
 /**
- * isIndeedJobUrl(url)
  * Check whether a URL points to an Indeed job page.
  *
  * Parameters:
@@ -66,7 +65,6 @@ function isIndeedJobUrl(url) {
 }
 
 /**
- * isLinkedInJobUrl(url)
  * Check whether a URL points to a LinkedIn job page.
  *
  * Parameters:
@@ -81,7 +79,6 @@ function isLinkedInJobUrl(url) {
 }
 
 /**
- * isGreenhouseJobUrl(url)
  * Check whether a URL is the Greenhouse job-boards host.
  *
  * Parameters:
@@ -93,8 +90,7 @@ function isGreenhouseJobUrl(url) {
 }
 
 /**
- * isSupportedJobUrl(url)
- * Check if a URL is one of the exact job-page URL patterns we support.
+ * Check if a URL is a specific job post link on any of our supported platform.
  *
  * Parameters:
  *  - url: URL instance
@@ -107,7 +103,6 @@ function isSupportedJobUrl(url) {
 }
 
 /**
- * isSupportedJobSite(url)
  * Looser check to determine if the current origin belongs to a supported
  * site family (used to distinguish unrelated sites from listing pages).
  *
@@ -124,16 +119,6 @@ function isSupportedJobSite(url) {
 }
 
 /**
- * getGenericJobHint()
- * Return the generic instruction message shown on listing/result pages.
- *
- * Returns: string
- */
-function getGenericJobHint() {
-  return "Open a job post directly. From a listings page, Ctrl/Cmd-click the job or right-click and open it in a new tab.";
-}
-/**
- * loadCurrentJob()
  * Query the active tab, determine whether it's a supported job URL, and
  * either request job info from the content script or render a helpful panel.
  */
@@ -147,7 +132,7 @@ async function loadCurrentJob() {
   }
 
   if (!isSupportedJobUrl(url)) {
-    renderNotAJobPage(getGenericJobHint());
+    renderNotAJobPage();
     return;
   }
 
@@ -156,7 +141,7 @@ async function loadCurrentJob() {
     renderSnapTab();
   } catch (e) {
     // Content script may not have loaded yet (e.g. on a search results page)
-    renderNotAJobPage(getGenericJobHint());
+    renderNotAJobPage();
   }
 }
 
@@ -192,6 +177,12 @@ function renderNotAJobPage() {
   `);
 }
 
+/**
+ * Render the main "Snap" tab with job info and actions, based on the `jobInfo` object
+ * retrieved from the content script.
+ *
+ *
+ */
 function renderSnapTab() {
   if (!jobInfo) return;
 
@@ -266,8 +257,6 @@ function copyText(text) {
     .writeText(text)
     .then(() => showToast("Copied to clipboard!"));
 }
-
-// Save/list functionality removed
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
