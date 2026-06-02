@@ -125,6 +125,35 @@
   }
 
   /**
+   * Parse the LinkedIn page title when it uses the common format
+   * "job title | company | LinkedIn".
+   *
+   * No parameters — reads `document.title`.
+   *
+   * Returns: { title: string|null, company: string|null }
+   */
+  function linkedinExtractTitleAndCompanyFromTitleTag() {
+    const parts = (document.title || "")
+      .split("|")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length < 3) {
+      return { title: null, company: null };
+    }
+
+    const lastPart = parts[parts.length - 1];
+    if (lastPart !== "LinkedIn") {
+      return { title: null, company: null };
+    }
+
+    return {
+      title: parts[0] || null,
+      company: parts[1] || null,
+    };
+  }
+
+  /**
    * Find the logo image inside the job post container and return its alt text
    * with any trailing "Logo" suffix removed. This is a greenhouse specific
    * parameter which has the clean company name in the alt text
@@ -202,34 +231,49 @@
 
       /* LinkedIn is the worst for this because they don't have real class names */
       case "linkedin":
-        title = (() => {
-          const paddingEl = document.querySelector(
-            "div._9449c08b.ada36d68._9fcd086c.f7a29ebc.f28d050d.e508c506",
+        ({ title, company } = linkedinExtractTitleAndCompanyFromTitleTag());
+
+        if (!title) {
+          title = (() => {
+            const titleEl = document.querySelector(
+              "p.c79dc0dc._1656056c._7cf9ca04.e52dc90e._841e37da.e62f23ac._5676dc79.cbbeae58._1cc62cc3.cdd2a5c4",
+            );
+            if (titleEl) {
+              const text = titleEl.innerText ? titleEl.innerText.trim() : "";
+              if (text) return text;
+            }
+            return null;
+          })();
+        }
+        if (!company) {
+          company = (() => {
+            const companyEl = document.querySelector(
+              'div[aria-label^="Company, "]',
+            );
+            if (companyEl) {
+              const label = companyEl.getAttribute("aria-label") || "";
+              const name = label
+                .replace(/^Company,\s*/, "")
+                .trim()
+                .replace(/\.$/, "");
+              if (name) return name;
+            }
+            return null;
+          })();
+        }
+
+        jobLocation = (() => {
+          const locationEl = document.querySelector(
+            "p.c79dc0dc.d3d37ba8._7cf9ca04.e52dc90e._0fb70456.e62f23ac._5676dc79.b67d801d._1cc62cc3.cdd2a5c4",
           );
-          const titleContainer = paddingEl && paddingEl.previousElementSibling;
-          if (titleContainer) {
-            const text = titleContainer.innerText
-              ? titleContainer.innerText.trim()
-              : "";
+          if (locationEl) {
+            const spanEl = locationEl.querySelector("span");
+            const text =
+              spanEl && spanEl.innerText ? spanEl.innerText.trim() : "";
             if (text) return text;
           }
-          return null;
+          return "";
         })();
-        company = (() => {
-          const companyEl = document.querySelector(
-            'div[aria-label^="Company, "]',
-          );
-          if (companyEl) {
-            const label = companyEl.getAttribute("aria-label") || "";
-            const name = label
-              .replace(/^Company,\s*/, "")
-              .trim()
-              .replace(/\.$/, "");
-            if (name) return name;
-          }
-          return null;
-        })();
-        jobLocation = "";
         salary = linkedinExtractSalaryText();
         break;
 
