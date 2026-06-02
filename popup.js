@@ -10,6 +10,7 @@ const SITE_LABELS = {
 let jobInfo = null;
 let excelColumns = [];
 let excelColumnsSet = false;
+let pageMode = "unknown";
 
 const DEFAULT_COLUMNS = ["company", "blank", "title", "salary", "cleanUrl"];
 
@@ -127,20 +128,24 @@ async function loadCurrentJob() {
   const url = new URL(tab.url);
 
   if (!isSupportedJobSite(url)) {
+    pageMode = "unsupported-site";
     renderUnsupported();
     return;
   }
 
   if (!isSupportedJobUrl(url)) {
+    pageMode = "supported-site-non-job";
     renderNotAJobPage();
     return;
   }
 
   try {
     jobInfo = await chrome.tabs.sendMessage(tab.id, { action: "getJobInfo" });
+    pageMode = "job-page";
     renderSnapTab();
   } catch (e) {
     // Content script may not have loaded yet (e.g. on a search results page)
+    pageMode = "supported-site-non-job";
     renderNotAJobPage();
   }
 }
@@ -184,7 +189,43 @@ function renderNotAJobPage() {
  *
  */
 function renderSnapTab() {
-  if (!jobInfo) return;
+  const tabs = `
+    <div class="tabs">
+      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
+      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
+    </div>
+  `;
+
+  if (!jobInfo) {
+    if (pageMode === "unsupported-site") {
+      renderUnsupported();
+      return;
+    }
+
+    if (pageMode === "supported-site-non-job") {
+      renderNotAJobPage();
+      return;
+    }
+
+    /**
+     * This is a rare fallback default case where jobInfo isn't set but
+     * there is pageMode that indicates otherwise. Left to catch rare errors
+     * if any.
+     */
+
+    setPanel(
+      tabs +
+        `
+    <div class="errorunknown">
+      <h3>Error please reload extension</h3>
+      <div class="supported-sites">
+        ${SUPPORTED_SITES.map((s) => `<span class="site-chip">${SITE_LABELS[s]}</span>`).join("")}
+      </div>
+    </div>
+  `,
+    );
+    return;
+  }
 
   const { site, title, company, location, salary, cleanUrl, rawUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
@@ -223,13 +264,6 @@ function renderSnapTab() {
           <button class="save-btn" data-action="copy-excel">Copy Excel</button>
         </div>
       </div>
-    </div>
-  `;
-
-  const tabs = `
-    <div class="tabs">
-      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
-      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
     </div>
   `;
 
