@@ -66,18 +66,11 @@
         break;
       }
       case "linkedin": {
-        // LinkedIn job id from URL path e.g. /jobs/view/1234567890
-        const match = url.pathname.match(/\/jobs\/view\/(\d+)/);
-        if (match) return `https://www.linkedin.com/jobs/view/${match[1]}/`;
-        // Also check currentJobId param
-        const jobId = url.searchParams.get("currentJobId");
-        if (jobId) return `https://www.linkedin.com/jobs/view/${jobId}/`;
+        return LinkedInJobSite.cleanURL(url);
         break;
       }
       case "greenhouse": {
-        // Greenhouse canonical job path: capture `/jobs/<id-or-slug>` only
-        const match = url.pathname.match(/(\/jobs\/[^\/\?#]+)/);
-        if (match) return `${url.origin}${match[1]}`;
+        return GreenhouseJobSite.cleanURL(url);
         break;
       }
       // other sites fall through to the generic fallback
@@ -100,103 +93,6 @@
   function q(selector) {
     const el = document.querySelector(selector);
     return el ? el.innerText.trim() : null;
-  }
-
-  /**
-   * linkedinExtractSalaryText()
-   * Look for LinkedIn salary divs with the exact class pattern requested and
-   * return the first one whose visible text contains a digit.
-   *
-   * No parameters — reads the current DOM.
-   *
-   * Returns: string|null
-   */
-  function linkedinExtractSalaryText() {
-    const salaryDivs = document.querySelectorAll(
-      "div.a2b56a91._2109e95f._15b3c506.c032b77a",
-    );
-
-    for (const div of salaryDivs) {
-      const text = (div.innerText || "").trim();
-      if (text && /\d/.test(text)) return text;
-    }
-
-    return null;
-  }
-
-  /**
-   * Parse the LinkedIn page title when it uses the common format
-   * "job title | company | LinkedIn".
-   *
-   * No parameters — reads `document.title`.
-   *
-   * Returns: { title: string|null, company: string|null }
-   */
-  function linkedinExtractTitleAndCompanyFromTitleTag() {
-    const parts = (document.title || "")
-      .split("|")
-      .map((part) => part.trim())
-      .filter(Boolean);
-
-    if (parts.length < 3) {
-      return { title: null, company: null };
-    }
-
-    const lastPart = parts[parts.length - 1];
-    if (lastPart !== "LinkedIn") {
-      return { title: null, company: null };
-    }
-
-    return {
-      title: parts[0] || null,
-      company: parts[1] || null,
-    };
-  }
-
-  /**
-   * Find the logo image inside the job post container and return its alt text
-   * with any trailing "Logo" suffix removed. This is a greenhouse specific
-   * parameter which has the clean company name in the alt text
-   * (e.g. "XXX Company Logo").
-   *
-   * No parameters — reads the current DOM.
-   *
-   * Returns: string|null
-   */
-  function greenhouseExtractLogoAltCompanyText() {
-    const container = document.querySelector(
-      "div.job-post-container div.image-container",
-    );
-    if (!container) return null;
-
-    const img = container.querySelector("img");
-    if (!img) return null;
-
-    const alt = (img.getAttribute("alt") || "").trim();
-    if (!alt) return null;
-
-    return alt.replace(/\s*Logo$/, "").trim() || null;
-  }
-
-  /**
-   * Derive a Greenhouse company name from the current URL pathname when the page
-   * doesn't expose a cleaner company label in the DOM. This is often not a clean
-   * company name (e.g. "acmeinc" vs. "Acme Inc.") but often the only option if
-   * there is no logo present on the job page.
-   *
-   * The URL is usually: `https://job-boards.greenhouse.io/<company-name>/jobs/<job-id>`,
-   * so it extracts <company-name>.
-   *
-   * No parameters — reads `location.pathname`.
-   *
-   * Returns: string|null
-   */
-  function greenhouseExtractCompanyFromURL() {
-    const p = location.pathname.split("/").filter(Boolean);
-    if (p.length && p[0] !== "jobs") {
-      return decodeURIComponent(p[0]).replace(/-/g, " ");
-    }
-    return null;
   }
 
   /**
@@ -231,69 +127,21 @@
 
       /* LinkedIn is the worst for this because they don't have real class names */
       case "linkedin":
-        ({ title, company } = linkedinExtractTitleAndCompanyFromTitleTag());
+        const linkedinInfo = LinkedInJobSite.extractJobInfo(document);
+        title = linkedinInfo.title;
+        company = linkedinInfo.company;
+        jobLocation = linkedinInfo.location;
+        salary = linkedinInfo.salary;
 
-        if (!title) {
-          title = (() => {
-            const titleEl = document.querySelector(
-              "p.c79dc0dc._1656056c._7cf9ca04.e52dc90e._841e37da.e62f23ac._5676dc79.cbbeae58._1cc62cc3.cdd2a5c4",
-            );
-            if (titleEl) {
-              const text = titleEl.innerText ? titleEl.innerText.trim() : "";
-              if (text) return text;
-            }
-            return null;
-          })();
-        }
-        if (!company) {
-          company = (() => {
-            const companyEl = document.querySelector(
-              'div[aria-label^="Company, "]',
-            );
-            if (companyEl) {
-              const label = companyEl.getAttribute("aria-label") || "";
-              const name = label
-                .replace(/^Company,\s*/, "")
-                .trim()
-                .replace(/\.$/, "");
-              if (name) return name;
-            }
-            return null;
-          })();
-        }
-
-        jobLocation = (() => {
-          const locationEl = document.querySelector(
-            "p.c79dc0dc.d3d37ba8._7cf9ca04.e52dc90e._0fb70456.e62f23ac._5676dc79.b67d801d._1cc62cc3.cdd2a5c4",
-          );
-          if (locationEl) {
-            const spanEl = locationEl.querySelector("span");
-            const text =
-              spanEl && spanEl.innerText ? spanEl.innerText.trim() : "";
-            if (text) return text;
-          }
-          return "";
-        })();
-        salary = linkedinExtractSalaryText();
         break;
 
       case "greenhouse":
-        title =
-          q("h1.job-title") || q("h1") || q(".opening-title") || document.title;
-        company =
-          greenhouseExtractLogoAltCompanyText() ||
-          greenhouseExtractCompanyFromURL();
-        jobLocation =
-          q('[class*="location"]') || q(".location") || q(".job-location");
-        // Prefer the paragraph with class "body" inside .pay-range
-        const payEl = document.querySelector(".pay-range");
-        if (payEl) {
-          // Prefer the plain `p.body` (exclude `p.body.body--medium`)
-          const p =
-            payEl.querySelector("p.body:not(.body--medium)") ||
-            payEl.querySelector("p.body");
-          if (p) salary = p.innerText.trim();
-        }
+        const greenhouseInfo = GreenhouseJobSite.extractJobInfo(document);
+        title = greenhouseInfo.title;
+        company = greenhouseInfo.company;
+        jobLocation = greenhouseInfo.location;
+        salary = greenhouseInfo.salary;
+
         break;
     }
 

@@ -24,7 +24,7 @@
         "https://www.linkedin.com/jobs/view/*",
         "https://job-boards.greenhouse.io/*"
       ],
-      "js": ["content.js"],
+      "js": ["jobsites/linkedin.js", "jobsites/greenhouse.js", "content.js"],
       "run_at": "document_idle"
     }
   ],
