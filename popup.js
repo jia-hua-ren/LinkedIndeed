@@ -32,19 +32,6 @@ const DATE_FORMAT_OPTIONS = [
   { val: "YYYY-MM-DD", label: "yyyy-mm-dd" },
 ];
 
-function isIndeedJobUrl(url) {
-  return (
-    url.origin === "https://www.indeed.com" &&
-    url.pathname.startsWith("/viewjob")
-  );
-}
-
-function isLinkedInJobUrl(url) {
-  return (
-    url.origin === "https://www.linkedin.com" &&
-    url.pathname.startsWith("/jobs/view/")
-  );
-}
 // Initialize UI and load state when the popup DOM is ready.
 document.addEventListener("DOMContentLoaded", async () => {
   bindPanelEvents();
