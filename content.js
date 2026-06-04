@@ -97,39 +97,31 @@
       jobLocation = null,
       salary = null;
 
+    let jobInfo = null;
+
     switch (site) {
       case "indeed":
-        const indeedInfo = IndeedJobSite.extractJobInfo(document);
-        title = indeedInfo.title;
-        company = indeedInfo.company;
-        jobLocation = indeedInfo.location;
-        salary = indeedInfo.salary;
-
+        jobInfo = IndeedJobSite.extractJobInfo(document);
         break;
 
       /* LinkedIn is the worst for this because they don't have real class names */
       case "linkedin":
-        const linkedinInfo = LinkedInJobSite.extractJobInfo(document);
-        title = linkedinInfo.title;
-        company = linkedinInfo.company;
-        jobLocation = linkedinInfo.location;
-        salary = linkedinInfo.salary;
-
+        jobInfo = LinkedInJobSite.extractJobInfo(document);
         break;
 
       case "greenhouse":
-        const greenhouseInfo = GreenhouseJobSite.extractJobInfo(document);
-        title = greenhouseInfo.title;
-        company = greenhouseInfo.company;
-        jobLocation = greenhouseInfo.location;
-        salary = greenhouseInfo.salary;
-
+        jobInfo = GreenhouseJobSite.extractJobInfo(document);
         break;
     }
 
+    title = jobInfo.title;
+    company = jobInfo.company;
+    jobLocation = jobInfo.location;
+    salary = jobInfo.salary;
+
     return {
       site,
-      title: title || document.title || null,
+      title: title || null,
       company: company || null,
       location: jobLocation || null,
       salary: salary || null,
