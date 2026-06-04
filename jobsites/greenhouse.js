@@ -26,6 +26,7 @@ const GreenhouseJobSite = {
     };
   },
 
+  /* the main method for extracting company text, through the alt text of the company logo. */
   extractLogoAltCompanyText(document) {
     const container = document.querySelector(
       "div.job-post-container div.image-container",
@@ -41,6 +42,7 @@ const GreenhouseJobSite = {
     return alt.replace(/\s*Logo$/, "").trim() || null;
   },
 
+  /* Fallback method for company if company logo is not available in job posting. */
   extractCompanyFromURL(url) {
     const pathnameParts = url.pathname.split("/").filter(Boolean);
     if (pathnameParts.length && pathnameParts[0] !== "jobs") {

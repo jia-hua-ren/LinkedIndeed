@@ -31,6 +31,12 @@ const LinkedInJobSite = {
     };
   },
 
+  /**
+   * The salary of the job is not always present, but if it is present, it is in a <a> element that has
+   * an href that directs to the current, same URL to the current job post (weird). So this finds all <a>'s
+   * that match the criteria and looks for one whose innerText contains a number.
+   */
+
   extractSalary(document) {
     const currentRawUrl = location.href;
     const salaryLinks = [
@@ -45,6 +51,10 @@ const LinkedInJobSite = {
     const text = (salaryLinks[0].innerText || "").trim();
     return text || null;
   },
+
+  /** The specific job site's title will always be a form of Job Title | Company Name | LinkedIn.
+   * Therefore, we can extract both from the webpage title tag.
+   */
 
   extractTitleAndCompanyFromTitleTag(document) {
     const parts = (document.title || "")
@@ -67,6 +77,9 @@ const LinkedInJobSite = {
     };
   },
 
+  /** Fallback in case webpage <title> is not present or doesn't match the format,
+   * which will almost never happen. But good to remember that the company name is also available
+   * in an aria-label attribute. */
   extractCompanyFromJobPage(document) {
     const companyEl = document.querySelector('div[aria-label^="Company, "]');
     if (!companyEl) return null;
