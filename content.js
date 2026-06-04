@@ -60,9 +60,7 @@
         return "";
       }
       case "indeed": {
-        // Indeed job key: ?jk=XXXX is all you need
-        const jk = url.searchParams.get("jk");
-        if (jk) return `https://www.indeed.com/viewjob?jk=${jk}`;
+        return IndeedJobSite.cleanURL(url);
         break;
       }
       case "linkedin": {
@@ -79,20 +77,6 @@
     // If site is not specially handled above, return an empty string
     // (we only produce cleaned URLs for known sites)
     return "";
-  }
-
-  /**
-   * Simple shorthand for `document.querySelector` that returns the visible
-   * trimmed text of the first matching element, or null when not found.
-   *
-   * Parameters:
-   *  - selector: string - CSS selector passed to `querySelector`.
-   *
-   * Returns: string|null
-   */
-  function q(selector) {
-    const el = document.querySelector(selector);
-    return el ? el.innerText.trim() : null;
   }
 
   /**
@@ -115,14 +99,12 @@
 
     switch (site) {
       case "indeed":
-        title =
-          q('[data-testid="jobsearch-JobInfoHeader-title"]') ||
-          q(".jobsearch-JobInfoHeader-title");
-        company =
-          q('[data-testid="inlineHeader-companyName"]') ||
-          q('[data-company-name="true"]');
-        jobLocation = q('[data-testid="inlineHeader-companyLocation"]');
-        salary = q("#salaryInfoAndJobType span");
+        const indeedInfo = IndeedJobSite.extractJobInfo(document);
+        title = indeedInfo.title;
+        company = indeedInfo.company;
+        jobLocation = indeedInfo.location;
+        salary = indeedInfo.salary;
+
         break;
 
       /* LinkedIn is the worst for this because they don't have real class names */
