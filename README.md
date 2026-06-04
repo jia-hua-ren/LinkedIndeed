@@ -2,7 +2,7 @@
 Are you tracking your job apps with an excel / google Sheets spreadsheet? This extension is for you! 
 
 # How to install
-(pending) will be uploaded to Chrome Extension store once finished
+This extension is officially on the Chrome Web Store! Install here: https://chromewebstore.google.com/detail/linked-indeed/mkjfhangliapdjidllfldlgcjdccfaoc?authuser=0&hl=en
 
 To load unpacked: Download the repo as a zip -> extract -> go to chrome://extensions -> turn on Developer Mode -> load unpacked -> select the unzipped folder.
 
