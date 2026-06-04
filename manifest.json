@@ -4,11 +4,7 @@
   "version": "1.0.0",
   "description": "Linked, Indeed! — save job listings with clean URLs and extracted details from Indeed, LinkedIn, and more.",
   "permissions": ["activeTab", "storage", "clipboardWrite"],
-  "host_permissions": [
-    "https://www.indeed.com/viewjob*",
-    "https://www.linkedin.com/jobs/view/*",
-    "https://job-boards.greenhouse.io/*"
-  ],
+
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
