@@ -87,8 +87,6 @@
    *
    * No parameters — reads `site` variable and the DOM.
    *
-   * TODO: make each job site extraction independent functions for easier maintenance and testing.
-   * TODO: fix linkedin extraction
    * Returns: Object {site, title, company, location, salary, cleanUrl}
    */
   function extractJobInfo() {
