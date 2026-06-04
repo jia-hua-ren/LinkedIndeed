@@ -1,6 +1,6 @@
 // Indeed-specific extraction helpers for the content script.
 
-const IndeedJobSite = {
+window.IndeedJobSite = window.IndeedJobSite || {
   cleanURL(url) {
     const jk = url.searchParams.get("jk");
     return jk ? `https://www.indeed.com/viewjob?jk=${jk}` : "";

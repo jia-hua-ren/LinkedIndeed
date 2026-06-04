@@ -140,7 +140,20 @@ async function loadCurrentJob() {
   }
 
   try {
-    jobInfo = await chrome.tabs.sendMessage(tab.id, { action: "getJobInfo" });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: [
+        "jobsites/indeed.js",
+        "jobsites/linkedin.js",
+        "jobsites/greenhouse.js",
+        "content.js",
+      ],
+    });
+
+    jobInfo = await chrome.tabs.sendMessage(tab.id, {
+      action: "getJobInfo",
+    });
+
     pageMode = "job-page";
     renderSnapTab();
   } catch (e) {

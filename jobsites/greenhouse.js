@@ -1,6 +1,6 @@
 // Greenhouse-specific extraction helpers for the content script.
 
-const GreenhouseJobSite = {
+window.GreenhouseJobSite = window.GreenhouseJobSite || {
   cleanURL(url) {
     const match = url.pathname.match(/(\/jobs\/[^\/\?#]+)/);
     return match ? `${url.origin}${match[1]}` : "";

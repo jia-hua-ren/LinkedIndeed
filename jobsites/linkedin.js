@@ -6,7 +6,7 @@
  * what divs contain what.
  */
 
-const LinkedInJobSite = {
+window.LinkedInJobSite = window.LinkedInJobSite || {
   cleanURL(url) {
     const match = url.pathname.match(/\/jobs\/view\/(\d+)/);
     if (match) return `https://www.linkedin.com/jobs/view/${match[1]}/`;

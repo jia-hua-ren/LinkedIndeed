@@ -2,6 +2,11 @@
 // Runs on supported job sites and extracts job info + cleans URLs
 
 (function () {
+  if (window.linkedIndeedInitialized) {
+    return;
+  }
+  window.linkedIndeedInitialized = true;
+
   const site = detectSite();
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
