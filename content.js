@@ -115,6 +115,16 @@
       case "greenhouse":
         jobInfo = GreenhouseJobSite.extractJobInfo(document);
         break;
+
+      case "unknown":
+        return {
+          site,
+          title: null,
+          company: null,
+          location: null,
+          salary: null,
+          cleanUrl: "",
+        };
     }
 
     title = jobInfo.title;
