@@ -32,5 +32,3 @@ const IndeedJobSite = {
     return salaryEl ? salaryEl.innerText.trim() : null;
   },
 };
-
-globalThis.IndeedJobSite = IndeedJobSite;

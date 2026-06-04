@@ -102,5 +102,3 @@ const LinkedInJobSite = {
     return text || null;
   },
 };
-
-globalThis.LinkedInJobSite = LinkedInJobSite;
