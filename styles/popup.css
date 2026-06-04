@@ -71,30 +71,6 @@ body {
   border-radius: var(--radius);
   padding: 12px;
   margin-bottom: 12px;
-  animation: slideIn 0.2s ease;
-}
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.site-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: var(--accent);
-  color: #111;
-  margin-bottom: 8px;
 }
 
 .job-title {
@@ -136,18 +112,17 @@ body {
   border-radius: 6px;
   padding: 6px 8px;
 }
+/* always show full URL and allow wrapping */
 .url-text {
   flex: 1;
   font-family: "DM Mono", monospace;
   font-size: 11px;
   color: var(--accent);
-}
-/* always show full URL and allow wrapping */
-.url-text {
   white-space: normal;
   overflow: visible;
   word-break: break-all;
 }
+
 .copy-btn {
   flex-shrink: 0;
   background: var(--accent);
@@ -242,18 +217,6 @@ body {
 .icon-btn.del:hover {
   border-color: var(--danger);
   color: var(--danger);
-}
-
-/* EMPTY STATE */
-.empty {
-  text-align: center;
-  padding: 30px 20px;
-  color: var(--muted);
-  font-size: 13px;
-}
-.empty-icon {
-  font-size: 28px;
-  margin-bottom: 8px;
 }
 
 /* UNSUPPORTED */
