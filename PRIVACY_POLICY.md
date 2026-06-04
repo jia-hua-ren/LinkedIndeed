@@ -53,8 +53,8 @@ Stores your Excel/Google Sheets settings so that when you click "copy excel", it
 ## clipboardWrite justification
 Used for the "Copy Excel" button which puts the relevant information together from the job post into a row for you to copy.
 
-## Host permission justification
-Needs to be able to identify which website the extension is on. If it is not on a supported website, the extension will do nothing. If it is on the home page of a job board site, but not a specific job posting page, it will prompt the user to open up a job post on a new tab.
+## scripting justification
+Used to inject the extraction script when you click on the extension on the job post, to the job post page. This injects when you click on the extension but if it is not a support job site or a supported job site but not a specific job posting, it will not do anything.
 
 # Contact
 
