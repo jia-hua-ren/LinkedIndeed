@@ -506,12 +506,8 @@ function loadSettings() {
     chrome.storage.local.get(
       ["excelColumns", "excelColumnsSet", "dateFormats"],
       (res) => {
-        // sanitize stored columns: replace or remove deprecated "rawUrl"
-        let stored = Array.isArray(res.excelColumns)
-          ? res.excelColumns
-              .map((c) => (c === "rawUrl" ? "cleanUrl" : c))
-              .filter(Boolean)
-          : [];
+        let stored = Array.isArray(res.excelColumns) ? res.excelColumns : [];
+
         excelColumns = stored.length ? stored : DEFAULT_COLUMNS.slice();
         excelColumnsSet = !!res.excelColumnsSet;
         dateFormats = res.dateFormats || {};
