@@ -23,7 +23,7 @@
    * specific job post on a supported platform (e.g. if on Indeed homepage only,
    * which has no job info, it would not return 'indeed').
    *
-   * Returns one of: 'indeed', 'linkedin', 'greenhouse', or 'unknown'.
+   * Returns one of: 'indeed', 'linkedin', 'greenhouse', 'ashby', or 'unknown'.
    *
    * No parameters — reads `location.href`.
    */
@@ -43,6 +43,12 @@
       return "linkedin";
 
     if (url.hostname === "job-boards.greenhouse.io") return "greenhouse";
+
+    if (
+      url.hostname === "jobs.ashbyhq.com" &&
+      /^\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+(?:\/.*)?$/.test(url.pathname)
+    )
+      return "ashby";
 
     return "unknown";
   }
@@ -74,6 +80,10 @@
       }
       case "greenhouse": {
         return GreenhouseJobSite.cleanURL(url);
+        break;
+      }
+      case "ashby": {
+        return AshbyJobSite.cleanURL(url);
         break;
       }
       // other sites fall through to the generic fallback
@@ -114,6 +124,10 @@
 
       case "greenhouse":
         jobInfo = GreenhouseJobSite.extractJobInfo(document);
+        break;
+
+      case "ashby":
+        jobInfo = AshbyJobSite.extractJobInfo(document);
         break;
 
       case "unknown":

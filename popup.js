@@ -1,10 +1,11 @@
 // popup.js — Linked, Indeed! popup logic
 
-const SUPPORTED_SITES = ["indeed", "linkedin", "greenhouse"];
+const SUPPORTED_SITES = ["indeed", "linkedin", "greenhouse", "ashby"];
 const SITE_LABELS = {
   indeed: "Indeed",
   linkedin: "LinkedIn",
   greenhouse: "Greenhouse",
+  ashby: "Ashby",
 };
 
 let jobInfo = null;
@@ -78,6 +79,20 @@ function isGreenhouseJobUrl(url) {
 }
 
 /**
+ * Check whether a URL points to an Ashby job page.
+ *
+ * Parameters:
+ *  - url: URL instance
+ * Returns: boolean
+ */
+function isAshbyJobUrl(url) {
+  return (
+    url.hostname === "jobs.ashbyhq.com" &&
+    /^\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+(?:\/.*)?$/.test(url.pathname)
+  );
+}
+
+/**
  * Check if a URL is a specific job post link on any of our supported platform.
  *
  * Parameters:
@@ -86,7 +101,10 @@ function isGreenhouseJobUrl(url) {
  */
 function isSupportedJobUrl(url) {
   return (
-    isIndeedJobUrl(url) || isLinkedInJobUrl(url) || isGreenhouseJobUrl(url)
+    isIndeedJobUrl(url) ||
+    isLinkedInJobUrl(url) ||
+    isGreenhouseJobUrl(url) ||
+    isAshbyJobUrl(url)
   );
 }
 
@@ -102,7 +120,8 @@ function isSupportedJobSite(url) {
   return (
     url.origin === "https://www.indeed.com" ||
     url.origin === "https://www.linkedin.com" ||
-    url.hostname.endsWith("greenhouse.io")
+    url.hostname.endsWith("greenhouse.io") ||
+    url.hostname.endsWith("ashbyhq.com")
   );
 }
 
@@ -133,6 +152,7 @@ async function loadCurrentJob() {
         "jobsites/indeed.js",
         "jobsites/linkedin.js",
         "jobsites/greenhouse.js",
+        "jobsites/ashby.js",
         "content.js",
       ],
     });
