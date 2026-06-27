@@ -9,15 +9,16 @@ window.IndeedJobSite = window.IndeedJobSite || {
   extractJobInfo(document) {
     const titleEl =
       document.querySelector('[data-testid="jobsearch-JobInfoHeader-title"]') ||
+      document.querySelector('[data-testid="vj-job-title"]') ||
       document.querySelector(".jobsearch-JobInfoHeader-title");
 
     const companyEl =
       document.querySelector('[data-testid="inlineHeader-companyName"]') ||
       document.querySelector('[data-company-name="true"]');
 
-    const locationEl = document.querySelector(
-      '[data-testid="inlineHeader-companyLocation"]',
-    );
+    const locationEl =
+      document.querySelector('[data-testid="inlineHeader-companyLocation"]') ||
+      document.querySelector('[data-testid="job-location"]');
 
     return {
       title: titleEl ? titleEl.innerText.trim() : null,
