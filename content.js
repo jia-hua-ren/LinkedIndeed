@@ -23,7 +23,7 @@
    * specific job post on a supported platform (e.g. if on Indeed homepage only,
    * which has no job info, it would not return 'indeed').
    *
-   * Returns one of: 'indeed', 'linkedin', 'greenhouse', 'ashby', or 'unknown'.
+   * Returns one of: 'indeed', 'linkedin', 'greenhouse', 'ashby', 'ziprecruiter' or 'unknown'.
    *
    * No parameters — reads `location.href`.
    */
@@ -49,6 +49,12 @@
       /^\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+(?:\/.*)?$/.test(url.pathname)
     )
       return "ashby";
+
+    if (
+      url.origin === "https://www.ziprecruiter.com" &&
+      url.pathname.startsWith("/jobs/job/")
+    )
+      return "ziprecruiter";
 
     return "unknown";
   }
@@ -84,6 +90,10 @@
       }
       case "ashby": {
         return AshbyJobSite.cleanURL(url);
+        break;
+      }
+      case "ziprecruiter": {
+        return ZiprecruiterJobSite.cleanURL(url);
         break;
       }
       // other sites fall through to the generic fallback
@@ -128,6 +138,10 @@
 
       case "ashby":
         jobInfo = AshbyJobSite.extractJobInfo(document);
+        break;
+
+      case "ziprecruiter":
+        jobInfo = ZiprecruiterJobSite.extractJobInfo(document);
         break;
 
       case "unknown":
