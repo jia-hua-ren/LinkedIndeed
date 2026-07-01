@@ -92,6 +92,14 @@ function isAshbyJobUrl(url) {
   );
 }
 
+function isZiprecruiterJobUrl(url) {
+  console.log("isZiprecruiterJobUrl", url.origin, url.pathname);
+  return (
+    url.origin === "https://www.ziprecruiter.com" &&
+    url.pathname.startsWith("/jobs/job/")
+  );
+}
+
 /**
  * Check if a URL is a specific job post link on any of our supported platform.
  *
@@ -104,7 +112,8 @@ function isSupportedJobUrl(url) {
     isIndeedJobUrl(url) ||
     isLinkedInJobUrl(url) ||
     isGreenhouseJobUrl(url) ||
-    isAshbyJobUrl(url)
+    isAshbyJobUrl(url) ||
+    isZiprecruiterJobUrl(url)
   );
 }
 
@@ -121,7 +130,8 @@ function isSupportedJobSite(url) {
     url.origin === "https://www.indeed.com" ||
     url.origin === "https://www.linkedin.com" ||
     url.hostname.endsWith("greenhouse.io") ||
-    url.hostname.endsWith("ashbyhq.com")
+    url.hostname.endsWith("ashbyhq.com") ||
+    url.hostname.endsWith("ziprecruiter.com")
   );
 }
 
@@ -153,6 +163,7 @@ async function loadCurrentJob() {
         "jobsites/linkedin.js",
         "jobsites/greenhouse.js",
         "jobsites/ashby.js",
+        "jobsites/ziprecruiter.js",
         "content.js",
       ],
     });
