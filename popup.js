@@ -1,11 +1,18 @@
 // popup.js — Linked, Indeed! popup logic
 
-const SUPPORTED_SITES = ["indeed", "linkedin", "greenhouse", "ashby"];
+const SUPPORTED_SITES = [
+  "indeed",
+  "linkedin",
+  "greenhouse",
+  "ashby",
+  "ziprecruiter",
+];
 const SITE_LABELS = {
   indeed: "Indeed",
   linkedin: "LinkedIn",
   greenhouse: "Greenhouse",
   ashby: "Ashby",
+  ziprecruiter: "ZipRecruiter",
 };
 
 let jobInfo = null;
