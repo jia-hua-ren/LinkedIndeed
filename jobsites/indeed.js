@@ -1,6 +1,8 @@
 // Indeed-specific extraction helpers for the content script.
 
-window.IndeedJobSite = window.IndeedJobSite || {
+const root = typeof window !== "undefined" ? window : globalThis;
+
+root.IndeedJobSite = root.IndeedJobSite || {
   cleanURL(url) {
     const jk = url.searchParams.get("jk");
     return jk ? `https://www.indeed.com/viewjob?jk=${jk}` : "";
@@ -33,3 +35,7 @@ window.IndeedJobSite = window.IndeedJobSite || {
     return salaryEl ? salaryEl.innerText.trim() : null;
   },
 };
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = root.IndeedJobSite;
+}

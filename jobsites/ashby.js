@@ -1,6 +1,8 @@
 // Ashby-specific extraction helpers for the content script.
 
-window.AshbyJobSite = window.AshbyJobSite || {
+const root = typeof window !== "undefined" ? window : globalThis;
+
+root.AshbyJobSite = root.AshbyJobSite || {
   cleanURL(url) {
     const match = url.pathname.match(
       /^\/([A-Za-z0-9-]+)\/([A-Za-z0-9-]+)(?:\/.*)?$/,
@@ -49,3 +51,7 @@ window.AshbyJobSite = window.AshbyJobSite || {
     return heading?.parentElement?.querySelector("p")?.innerText.trim() || null;
   },
 };
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = root.AshbyJobSite;
+}

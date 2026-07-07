@@ -1,12 +1,14 @@
 // LinkedIn-specific extraction helpers for the content script.
 
+const root = typeof window !== "undefined" ? window : globalThis;
+
 /**
  * LinkedIn is a mystery when it comes to class names. They are not human-readable.
  * I basically looked at many LinkedIn job pages and found common patterns like
  * what divs contain what.
  */
 
-window.LinkedInJobSite = window.LinkedInJobSite || {
+root.LinkedInJobSite = root.LinkedInJobSite || {
   cleanURL(url) {
     const match = url.pathname.match(/\/jobs\/view\/(\d+)/);
     if (match) return `https://www.linkedin.com/jobs/view/${match[1]}/`;
@@ -115,3 +117,7 @@ window.LinkedInJobSite = window.LinkedInJobSite || {
     return text || null;
   },
 };
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = root.LinkedInJobSite;
+}

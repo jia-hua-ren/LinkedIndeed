@@ -1,6 +1,8 @@
 // Greenhouse-specific extraction helpers for the content script.
 
-window.GreenhouseJobSite = window.GreenhouseJobSite || {
+const root = typeof window !== "undefined" ? window : globalThis;
+
+root.GreenhouseJobSite = root.GreenhouseJobSite || {
   cleanURL(url) {
     const match = url.pathname.match(/(\/jobs\/[^\/\?#]+)/);
     return match ? `${url.origin}${match[1]}` : "";
@@ -67,3 +69,7 @@ window.GreenhouseJobSite = window.GreenhouseJobSite || {
     return paragraph ? paragraph.innerText.trim() : null;
   },
 };
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = root.GreenhouseJobSite;
+}

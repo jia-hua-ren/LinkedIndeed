@@ -1,4 +1,6 @@
-window.ZiprecruiterJobSite = window.ZiprecruiterJobSite || {
+const root = typeof window !== "undefined" ? window : globalThis;
+
+root.ZiprecruiterJobSite = root.ZiprecruiterJobSite || {
   cleanURL(url) {
     const lvk = url.searchParams.get("lvk");
     return lvk ? `https://www.ziprecruiter.com/jobs/job/i?lvk=${lvk}` : "";
@@ -50,3 +52,7 @@ window.ZiprecruiterJobSite = window.ZiprecruiterJobSite || {
     return null;
   },
 };
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = root.ZiprecruiterJobSite;
+}

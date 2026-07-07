@@ -102,3 +102,15 @@ function isSupportedJobSite(url) {
     url.hostname.endsWith("ziprecruiter.com")
   );
 }
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    isIndeedJobUrl,
+    isLinkedInJobUrl,
+    isGreenhouseJobUrl,
+    isAshbyJobUrl,
+    isZiprecruiterJobUrl,
+    detectJobPageSite,
+    isSupportedJobSite,
+  };
+}
