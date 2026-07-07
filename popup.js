@@ -46,101 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadSettings();
   await loadCurrentJob();
 });
-/**
- * Check whether a URL points to an Indeed job page.
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isIndeedJobUrl(url) {
-  return (
-    url.origin === "https://www.indeed.com" &&
-    url.pathname.startsWith("/viewjob")
-  );
-}
-
-/**
- * Check whether a URL points to a LinkedIn job page.
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isLinkedInJobUrl(url) {
-  return (
-    url.origin === "https://www.linkedin.com" &&
-    url.pathname.startsWith("/jobs/view/")
-  );
-}
-
-/**
- * Check whether a URL is the Greenhouse job-boards host.
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isGreenhouseJobUrl(url) {
-  return url.hostname === "job-boards.greenhouse.io";
-}
-
-/**
- * Check whether a URL points to an Ashby job page.
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isAshbyJobUrl(url) {
-  return (
-    url.hostname === "jobs.ashbyhq.com" &&
-    /^\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+(?:\/.*)?$/.test(url.pathname)
-  );
-}
-
-function isZiprecruiterJobUrl(url) {
-  console.log("isZiprecruiterJobUrl", url.origin, url.pathname);
-  return (
-    url.origin === "https://www.ziprecruiter.com" &&
-    url.pathname.startsWith("/jobs/job/")
-  );
-}
-
-/**
- * Check if a URL is a specific job post link on any of our supported platform.
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isSupportedJobUrl(url) {
-  return (
-    isIndeedJobUrl(url) ||
-    isLinkedInJobUrl(url) ||
-    isGreenhouseJobUrl(url) ||
-    isAshbyJobUrl(url) ||
-    isZiprecruiterJobUrl(url)
-  );
-}
-
-/**
- * Looser check to determine if the current origin belongs to a supported
- * site family (used to distinguish unrelated sites from listing pages).
- *
- * Parameters:
- *  - url: URL instance
- * Returns: boolean
- */
-function isSupportedJobSite(url) {
-  return (
-    url.origin === "https://www.indeed.com" ||
-    url.origin === "https://www.linkedin.com" ||
-    url.hostname.endsWith("greenhouse.io") ||
-    url.hostname.endsWith("ashbyhq.com") ||
-    url.hostname.endsWith("ziprecruiter.com")
-  );
-}
 
 /**
  * Query the active tab, determine whether it's a supported job URL, and
@@ -156,7 +61,7 @@ async function loadCurrentJob() {
     return;
   }
 
-  if (!isSupportedJobUrl(url)) {
+  if (!detectJobPageSite(url)) {
     pageMode = "supported-site-non-job";
     renderNotAJobPage();
     return;
@@ -166,6 +71,7 @@ async function loadCurrentJob() {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: [
+        "urlUtils.js",
         "jobsites/indeed.js",
         "jobsites/linkedin.js",
         "jobsites/greenhouse.js",

@@ -7,7 +7,7 @@
   }
   window.linkedIndeedInitialized = true;
 
-  const site = detectSite();
+  const site = detectJobPageSite(location.href);
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === "getJobInfo") {
@@ -16,48 +16,6 @@
     }
     return true;
   });
-
-  /**
-   * Determines which supported site the current page represents based on the
-   * location URL. This only returns a valid result if the site is a URL to a
-   * specific job post on a supported platform (e.g. if on Indeed homepage only,
-   * which has no job info, it would not return 'indeed').
-   *
-   * Returns one of: 'indeed', 'linkedin', 'greenhouse', 'ashby', 'ziprecruiter' or 'unknown'.
-   *
-   * No parameters — reads `location.href`.
-   */
-  function detectSite() {
-    const url = new URL(location.href);
-
-    if (
-      url.origin === "https://www.indeed.com" &&
-      url.pathname.startsWith("/viewjob")
-    )
-      return "indeed";
-
-    if (
-      url.origin === "https://www.linkedin.com" &&
-      url.pathname.startsWith("/jobs/view/")
-    )
-      return "linkedin";
-
-    if (url.hostname === "job-boards.greenhouse.io") return "greenhouse";
-
-    if (
-      url.hostname === "jobs.ashbyhq.com" &&
-      /^\/[A-Za-z0-9-]+\/[A-Za-z0-9-]+(?:\/.*)?$/.test(url.pathname)
-    )
-      return "ashby";
-
-    if (
-      url.origin === "https://www.ziprecruiter.com" &&
-      url.pathname.startsWith("/jobs/job/")
-    )
-      return "ziprecruiter";
-
-    return "unknown";
-  }
 
   /**
    * Shortens the URL to the job post page by stripping unnecessary query
@@ -73,7 +31,7 @@
     const url = new URL(location.href);
 
     switch (site) {
-      case "unknown": {
+      case "": {
         return "";
       }
       case "indeed": {
@@ -144,7 +102,7 @@
         jobInfo = ZiprecruiterJobSite.extractJobInfo(document);
         break;
 
-      case "unknown":
+      case "":
         return {
           site,
           title: null,
