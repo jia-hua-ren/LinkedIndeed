@@ -265,7 +265,7 @@ function renderSnapTab() {
     return;
   }
 
-  const { site, title, company, location, salary, cleanUrl, rawUrl } = jobInfo;
+  const { site, title, company, location, salary, cleanUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
 
   const locationHTML = location
@@ -295,7 +295,7 @@ function renderSnapTab() {
           ${salaryHTML}
         </div>
         <div class="url-row">
-          <div class="url-text" title="${escHTML(rawUrl)}">${escHTML(cleanUrl || rawUrl)}</div>
+          <div class="url-text" title="${escHTML(cleanUrl)}">${escHTML(cleanUrl)}</div>
           <button class="copy-btn" id="copyBtn" data-action="copy-current-url">Copy</button>
         </div>
         <div style="margin-top:8px; display:flex; gap:8px;">
@@ -313,9 +313,7 @@ function renderSnapTab() {
 function copyURL() {
   if (!jobInfo) return;
   const toCopy =
-    jobInfo.cleanUrl && jobInfo.cleanUrl.length
-      ? jobInfo.cleanUrl
-      : jobInfo.rawUrl || "";
+    jobInfo.cleanUrl && jobInfo.cleanUrl.length ? jobInfo.cleanUrl : "";
   copyText(toCopy);
   const btn = document.getElementById("copyBtn");
   if (btn) {
