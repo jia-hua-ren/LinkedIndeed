@@ -22,6 +22,12 @@
     case "greenhouse":
       jobScraper = new GreenhouseScraper(document, location.href);
       break;
+    case "ashby":
+      jobScraper = new AshbyScraper(document, location.href);
+      break;
+    case "ziprecruiter":
+      jobScraper = new ZiprecruiterScraper(document, location.href);
+      break;
   }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {

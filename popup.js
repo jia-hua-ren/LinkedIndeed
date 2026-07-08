@@ -88,9 +88,8 @@ async function loadCurrentJob() {
         "jobsites/IndeedScraper.js",
         "jobsites/LinkedInScraper.js",
         "jobsites/GreenhouseScraper.js",
-        "jobsites/greenhouse.js",
-        "jobsites/ashby.js",
-        "jobsites/ziprecruiter.js",
+        "jobsites/AshbyScraper.js",
+        "jobsites/ZipRecruiterScraper.js",
         "content.js",
       ],
     });
