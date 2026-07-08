@@ -1,16 +1,16 @@
 // content.js — Linked, Indeed! content script
-// Runs on supported job sites and extracts job info + cleans URLs
+// ONLY runs on supported platforms' specific job pages, extracts job info + cleans URLs
 
 (function () {
-  if (window.linkedIndeedInitialized) {
-    return;
-  }
+  // Once set, as long as the page is alive, it will always be true. Used to prevent re-intialization
   window.linkedIndeedInitialized = true;
 
   const site = detectJobPageSite(location.href);
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (msg.action === "getJobInfo") {
+    if (msg.action === "getInitialized") {
+      sendResponse(window.linkedIndeedInitialized);
+    } else if (msg.action === "getJobInfo") {
       const info = extractJobInfo();
       sendResponse(info);
     }
