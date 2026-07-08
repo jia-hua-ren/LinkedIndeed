@@ -6,41 +6,42 @@
  * what divs contain what.
  */
 
-window.LinkedInJobSite = window.LinkedInJobSite || {
-  cleanURL(url) {
-    const match = url.pathname.match(/\/jobs\/view\/(\d+)/);
+class LinkedInScraper extends JobScraper {
+  constructor(document, url) {
+    super(document, url);
+  }
+
+  cleanURL() {
+    const match = this.url.pathname.match(/\/jobs\/view\/(\d+)/);
     if (match) return `https://www.linkedin.com/jobs/view/${match[1]}/`;
 
-    const jobId = url.searchParams.get("currentJobId");
+    const jobId = this.url.searchParams.get("currentJobId");
     if (jobId) return `https://www.linkedin.com/jobs/view/${jobId}/`;
 
     return "";
-  },
+  }
 
-  extractJobInfo(document) {
-    const titleAndCompany = this.extractTitleAndCompanyFromTitleTag(document);
+  getTitle() {
+    return this.extractTitleAndCompanyFromTitleTag().title || null;
+  }
 
-    return {
-      title: titleAndCompany.title || null,
-      company:
-        titleAndCompany.company ||
-        this.extractCompanyFromJobPage(document) ||
-        null,
-      location: this.extractLocation(document),
-      salary: this.extractSalary(document),
-    };
-  },
+  getCompany() {
+    return (
+      this.extractTitleAndCompanyFromTitleTag().company ||
+      this.extractCompanyFromJobPage() ||
+      null
+    );
+  }
 
   /**
    * The salary of the job is not always present, but if it is present, it is in a <a> element that has
    * an href that directs to the current, same URL to the current job post (weird). So this finds all <a>'s
    * that match the criteria and looks for one whose innerText contains a number.
    */
-
-  extractSalary(document) {
+  getSalary() {
     const currentRawUrl = location.href;
     const salaryLinks = [
-      ...document.querySelectorAll(`a[href="${currentRawUrl}"]`),
+      ...this.document.querySelectorAll(`a[href="${currentRawUrl}"]`),
     ].filter((link) => {
       const text = (link.innerText || "").trim();
       return text && /\d/.test(text);
@@ -50,14 +51,36 @@ window.LinkedInJobSite = window.LinkedInJobSite || {
 
     const text = (salaryLinks[0].innerText || "").trim();
     return text || null;
-  },
+  }
+
+  /** after doing light testing, the p that matches the description is the 5th one,
+   * so I am cutting the result array so it doesn't get too big. If there is a bug
+   * this can be removed so it can search all.
+   */
+  getLocation() {
+    const p = [...this.document.querySelectorAll("p")]
+      .slice(0, 10)
+      .find(
+        (paragraph) =>
+          paragraph.children.length > 0 &&
+          [...paragraph.children].every((child) => child.tagName === "SPAN"),
+      );
+
+    if (!p) return null;
+
+    const firstSpan = p.querySelector("span");
+    if (!firstSpan) return null;
+
+    const text = (firstSpan.innerText || "").trim();
+    return text || null;
+  }
 
   /** The specific job site's title will always be a form of Job Title | Company Name | LinkedIn.
    * Therefore, we can extract both from the webpage title tag.
    */
 
-  extractTitleAndCompanyFromTitleTag(document) {
-    const parts = (document.title || "")
+  extractTitleAndCompanyFromTitleTag() {
+    const parts = (this.document.title || "")
       .split("|")
       .map((part) => part.trim())
       .filter(Boolean);
@@ -75,13 +98,15 @@ window.LinkedInJobSite = window.LinkedInJobSite || {
       title: parts[0] || null,
       company: parts[1] || null,
     };
-  },
+  }
 
   /** Fallback in case webpage <title> is not present or doesn't match the format,
    * which will almost never happen. But good to remember that the company name is also available
    * in an aria-label attribute. */
-  extractCompanyFromJobPage(document) {
-    const companyEl = document.querySelector('div[aria-label^="Company, "]');
+  extractCompanyFromJobPage() {
+    const companyEl = this.document.querySelector(
+      'div[aria-label^="Company, "]',
+    );
     if (!companyEl) return null;
 
     const label = companyEl.getAttribute("aria-label") || "";
@@ -91,27 +116,5 @@ window.LinkedInJobSite = window.LinkedInJobSite || {
       .replace(/\.$/, "");
 
     return name || null;
-  },
-
-  /** after doing light testing, the p that matches the description is the 5th one,
-   * so I am cutting the result array so it doesn't get too big. If there is a bug
-   * this can be removed so it can search all.
-   */
-  extractLocation(document) {
-    const p = [...document.querySelectorAll("p")]
-      .slice(0, 10)
-      .find(
-        (paragraph) =>
-          paragraph.children.length > 0 &&
-          [...paragraph.children].every((child) => child.tagName === "SPAN"),
-      );
-
-    if (!p) return null;
-
-    const firstSpan = p.querySelector("span");
-    if (!firstSpan) return null;
-
-    const text = (firstSpan.innerText || "").trim();
-    return text || null;
-  },
-};
+  }
+}

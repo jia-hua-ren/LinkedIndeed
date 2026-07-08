@@ -84,8 +84,10 @@ async function loadCurrentJob() {
       target: { tabId: tab.id },
       files: [
         "urlUtils.js",
-        "jobsites/indeed.js",
-        "jobsites/linkedin.js",
+        "jobsites/JobScraper.js",
+        "jobsites/IndeedScraper.js",
+        "jobsites/LinkedInScraper.js",
+        "jobsites/GreenhouseScraper.js",
         "jobsites/greenhouse.js",
         "jobsites/ashby.js",
         "jobsites/ziprecruiter.js",

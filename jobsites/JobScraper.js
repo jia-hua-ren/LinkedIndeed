@@ -30,6 +30,7 @@ class JobScraper {
       company: this.getCompany(),
       salary: this.getSalary(),
       location: this.getLocation(),
+      cleanUrl: this.cleanURL(),
     };
   }
 }
