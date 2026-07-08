@@ -67,7 +67,19 @@ async function loadCurrentJob() {
     return;
   }
 
+  let initialized = false;
+
+  /**
+   * Send a message to content script and check for initialization.
+   * If initialized, it will skip re-executing the scripts.
+   * If not initialized, it will execute the scripts in the content script context.
+   */
+
   try {
+    initialized = await chrome.tabs.sendMessage(tab.id, {
+      action: "getInitialized",
+    });
+  } catch (e) {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: [
@@ -80,18 +92,14 @@ async function loadCurrentJob() {
         "content.js",
       ],
     });
-
-    jobInfo = await chrome.tabs.sendMessage(tab.id, {
-      action: "getJobInfo",
-    });
-
-    pageMode = "job-page";
-    renderSnapTab();
-  } catch (e) {
-    // Content script may not have loaded yet (e.g. on a search results page)
-    pageMode = "supported-site-non-job";
-    renderNotAJobPage();
   }
+
+  jobInfo = await chrome.tabs.sendMessage(tab.id, {
+    action: "getJobInfo",
+  });
+
+  pageMode = "job-page";
+  renderSnapTab();
 }
 
 // ── Render States ─────────────────────────────────────────────────────────────
