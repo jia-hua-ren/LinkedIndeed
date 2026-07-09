@@ -1,12 +1,5 @@
 // popup.js — Linked, Indeed! popup logic
 
-const SUPPORTED_SITES = [
-  "indeed",
-  "linkedin",
-  "greenhouse",
-  "ashby",
-  "ziprecruiter",
-];
 const SITE_LABELS = {
   indeed: "Indeed",
   linkedin: "LinkedIn",
@@ -116,7 +109,9 @@ function renderUnsupported() {
       <h3>Not a supported job site</h3>
       <p>Navigate to a job listing on one of these sites to use Linked, Indeed!:</p>
       <div class="supported-sites">
-        ${SUPPORTED_SITES.map((s) => `<span class="site-chip">${SITE_LABELS[s]}</span>`).join("")}
+        ${Object.entries(SITE_LABELS)
+          .map(([, label]) => `<span class="site-chip">${label}</span>`)
+          .join("")}
       </div>
     </div>
   `);
@@ -172,7 +167,9 @@ function renderSnapTab() {
     <div class="errorunknown">
       <h3>Error please reload extension</h3>
       <div class="supported-sites">
-        ${SUPPORTED_SITES.map((s) => `<span class="site-chip">${SITE_LABELS[s]}</span>`).join("")}
+        ${Object.entries(SITE_LABELS)
+          .map(([, label]) => `<span class="site-chip">${label}</span>`)
+          .join("")}
       </div>
     </div>
   `,
