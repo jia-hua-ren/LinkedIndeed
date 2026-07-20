@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Linked, Indeed!",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Linked, Indeed! — save job listings with clean URLs and extracted details from Indeed, LinkedIn, and more.",
   "permissions": ["activeTab", "scripting", "storage", "clipboardWrite"],
 
