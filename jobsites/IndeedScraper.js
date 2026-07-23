@@ -19,7 +19,7 @@ class IndeedScraper extends JobScraper {
     </div>
     */
     const title = this.document.querySelector('[data-testid="vj-job-title"]');
-    const nextDiv = title.parentElement.nextElementSibling.children[0];
+    const nextDiv = title?.parentElement.nextElementSibling.children[0];
     this.companyInfoSection = nextDiv;
   }
 
