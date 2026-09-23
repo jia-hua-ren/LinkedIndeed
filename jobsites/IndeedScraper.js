@@ -19,7 +19,7 @@ class IndeedScraper extends JobScraper {
     </div>
     */
     const title = this.document.querySelector('[data-testid="vj-job-title"]');
-    const nextDiv = title?.parentElement.nextElementSibling.children[0];
+    const nextDiv = title?.parentElement?.nextElementSibling?.children[0];
     this.companyInfoSection = nextDiv;
   }
 
@@ -44,11 +44,12 @@ class IndeedScraper extends JobScraper {
     // in case it comes back in the future.
     const companyEl =
       this.document.querySelector('[data-testid="inlineHeader-companyName"]') ||
+      this.document.querySelector('[data-testid="vj-company-name"]') ||
       this.document.querySelector('[data-company-name="true"]');
 
     const companyName = this.companyInfoSection?.children[0]
       ?.querySelector("a")
-      .textContent.trim();
+      ?.textContent?.trim();
 
     return companyName || companyEl?.innerText.trim() || null;
   }
@@ -56,14 +57,14 @@ class IndeedScraper extends JobScraper {
   getSalary() {
     const jobDetailSection = this.document.querySelector("#jobDetailsSection");
     const payHeading = [...jobDetailSection?.querySelectorAll("h2")].find(
-      (h2) => h2.textContent.trim() === "Pay",
+      (h2) => h2.textContent?.trim() === "Pay",
     );
 
     const payElement = payHeading?.nextElementSibling;
 
     const salaryEl = this.document.querySelector("#salaryInfoAndJobType span");
     return (
-      payElement?.textContent.trim() || salaryEl?.textContent.trim() || null
+      payElement?.textContent?.trim() || salaryEl?.textContent?.trim() || null
     );
   }
 
@@ -75,7 +76,8 @@ class IndeedScraper extends JobScraper {
         '[data-testid="inlineHeader-companyLocation"]',
       ) || this.document.querySelector('[data-testid="job-location"]');
 
-    const companyLoc = this.companyInfoSection?.children[1]?.textContent.trim();
+    const companyLoc =
+      this.companyInfoSection?.children[1]?.textContent?.trim();
 
     return companyLoc || locationEl?.innerText.trim() || null;
   }
