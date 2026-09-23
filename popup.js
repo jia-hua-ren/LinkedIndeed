@@ -46,6 +46,13 @@ document.addEventListener("DOMContentLoaded", async () => {
  */
 async function loadCurrentJob() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // catch chrome newtab which would have no URL
+  if (!tab.url) {
+    pageMode = "unsupported-site";
+    renderUnsupported();
+    return;
+  }
   const url = new URL(tab.url);
 
   if (!isSupportedJobSite(url)) {
