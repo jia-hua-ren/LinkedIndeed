@@ -85,6 +85,96 @@ body {
   font-weight: 600;
   margin-bottom: 3px;
 }
+.editable-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+.editable-field.job-title {
+  margin-bottom: 4px;
+}
+.editable-field.job-company {
+  margin-bottom: 3px;
+}
+.editable-value {
+  min-width: 0;
+}
+.field-edit-btn,
+.field-save-btn {
+  opacity: 0;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.editable-field:hover > .field-edit-btn,
+.editable-field:focus-within > .field-edit-btn {
+  opacity: 1;
+}
+.field-edit-btn {
+  margin-left: 6px;
+  padding: 2px 6px;
+  font-family: "Syne", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+}
+.field-edit-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.field-save-btn {
+  opacity: 1;
+  width: 26px;
+  height: 26px;
+  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #111;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.field-save-btn:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+}
+.field-input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  background: #111;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  padding: 3px 6px;
+}
+.text-editing.job-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.text-editing.job-company {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.meta-editing {
+  width: 100%;
+}
+.meta-editing .field-input {
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
 .job-meta {
   display: block;
   margin-top: 8px;
