@@ -30,12 +30,21 @@
       break;
   }
 
+  // the field of the job : the value of the job
+  const editedJobFields = {};
+
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.action === "getInitialized") {
       sendResponse(window.linkedIndeedInitialized);
     } else if (msg.action === "getJobInfo") {
       const info = jobScraper.getJobInfo();
-      sendResponse(info);
+      sendResponse({ ...info, ...editedJobFields });
+    } else if (
+      msg.action === "updateJobInfo" &&
+      ["title", "company", "location", "salary"].includes(msg.field)
+    ) {
+      editedJobFields[msg.field] = String(msg.value ?? "");
+      sendResponse(true);
     }
     return true;
   });

@@ -36,7 +36,7 @@ class IndeedScraper extends JobScraper {
       this.document.querySelector('[data-testid="vj-job-title"]') ||
       this.document.querySelector(".jobsearch-JobInfoHeader-title");
 
-    return titleEl ? titleEl.innerText.trim() : null;
+    return titleEl ? titleEl.innerText.trim() : "";
   }
 
   getCompany() {
@@ -51,7 +51,7 @@ class IndeedScraper extends JobScraper {
       ?.querySelector("a")
       ?.textContent?.trim();
 
-    return companyName || companyEl?.innerText.trim() || null;
+    return companyName || companyEl?.innerText.trim() || "";
   }
 
   getSalary() {
@@ -90,7 +90,7 @@ class IndeedScraper extends JobScraper {
 
     const salaryEl = this.document.querySelector("#salaryInfoAndJobType span");
     return (
-      payElement?.textContent?.trim() || salaryEl?.textContent?.trim() || null
+      payElement?.textContent?.trim() || salaryEl?.textContent?.trim() || ""
     );
   }
 
@@ -105,6 +105,6 @@ class IndeedScraper extends JobScraper {
     const companyLoc =
       this.companyInfoSection?.children[1]?.textContent?.trim();
 
-    return companyLoc || locationEl?.innerText.trim() || null;
+    return companyLoc || locationEl?.innerText.trim() || "";
   }
 }

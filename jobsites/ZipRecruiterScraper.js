@@ -12,14 +12,14 @@ class ZiprecruiterScraper extends JobScraper {
     const parent = this.document.querySelector(".grid.gap-y-8");
     const jobTitleEl = parent?.children[0];
     const jobTitle = jobTitleEl?.innerText.trim();
-    return jobTitle ? jobTitle : null;
+    return jobTitle ? jobTitle : "";
   }
 
   getCompany() {
     const parent = this.document.querySelector(".grid.gap-y-8");
     const companyNameEl = parent?.children[1];
     const companyName = companyNameEl?.innerText.trim();
-    return companyName ? companyName : null;
+    return companyName ? companyName : "";
   }
 
   /**
@@ -30,7 +30,7 @@ class ZiprecruiterScraper extends JobScraper {
    */
   getSalary() {
     const parent = this.document.querySelector("div.flex.flex-col.gap-y-8");
-    if (!parent) return null;
+    if (!parent) return "";
 
     for (const child of parent.children) {
       const salarySvg = child.querySelector(
@@ -42,13 +42,13 @@ class ZiprecruiterScraper extends JobScraper {
       }
     }
 
-    return null;
+    return "";
   }
 
   getLocation() {
     const parent = this.document.querySelector(".grid.gap-y-8");
     const jobLocationEl = parent?.children[2];
     const jobLocation = jobLocationEl?.innerText.trim();
-    return jobLocation ? jobLocation : null;
+    return jobLocation ? jobLocation : "";
   }
 }

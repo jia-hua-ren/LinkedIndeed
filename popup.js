@@ -12,6 +12,7 @@ let jobInfo = null;
 let excelColumns = [];
 let excelColumnsSet = false;
 let pageMode = "unknown";
+let editingField = null;
 
 const DEFAULT_COLUMNS = ["company", "blank", "title", "salary", "cleanUrl"];
 
@@ -187,28 +188,28 @@ function renderSnapTab() {
   const { site, title, company, location, salary, cleanUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
 
-  const locationHTML = location
-    ? `
-    <div class="meta-item">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      ${escHTML(location)}
-    </div>`
-    : "";
+  const locationHTML = editableMetaField(
+    "location",
+    location,
+    "Location",
+    `
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+  );
 
-  const salaryHTML = salary
-    ? `
-    <div class="meta-item">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      ${escHTML(salary)}
-    </div>`
-    : "";
+  const salaryHTML = editableMetaField(
+    "salary",
+    salary,
+    "Salary",
+    `
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+  );
 
   const snapHtml = `
     <div id="snapView">
       <div class="job-card">
         <div class="site-badge">${escHTML(label)}</div>
-        <div class="job-title">${escHTML(title || "Job Title Unknown")}</div>
-        ${company ? `<div class="job-company">${escHTML(company)}</div>` : ""}
+        ${editableTextField("title", title, "Job Title Unknown", "job-title")}
+        ${editableTextField("company", company, "Company Unknown", "job-company")}
         <div class="job-meta">
           ${locationHTML}
           ${salaryHTML}
@@ -260,6 +261,7 @@ function bindPanelEvents() {
   panel.dataset.bound = "true";
   panel.addEventListener("click", handlePanelClick);
   panel.addEventListener("change", handlePanelChange);
+  panel.addEventListener("keydown", handlePanelKeydown);
 }
 
 function handlePanelClick(event) {
@@ -314,6 +316,24 @@ function handlePanelClick(event) {
     case "copy-text":
       copyText(actionEl.dataset.text || "");
       break;
+    case "edit-field":
+      editingField = actionEl.dataset.field;
+      renderSnapTab();
+      // necessary to perform edit and focusing on the field, could consider just not using it
+      // but might be clunky. GPT suggested this
+      requestAnimationFrame(() => {
+        const input = document.querySelector(
+          `[data-edit-field="${editingField}"]`,
+        );
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+      break;
+    case "save-field":
+      saveEditedField(actionEl.dataset.field);
+      break;
   }
 }
 
@@ -324,9 +344,98 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2000);
 }
 
+function editableTextField(field, value, placeholder, className) {
+  if (editingField === field) {
+    return `
+      <div class="editable-field text-editing ${className}">
+        <input class="field-input" data-edit-field="${field}" value="${escHTML(value || "")}" placeholder="${escHTML(placeholder)}" />
+        ${saveFieldButton(field)}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="editable-field ${className}">
+      <span class="editable-value">${escHTML(value || placeholder)}</span>
+      ${editFieldButton(field)}
+    </div>
+  `;
+}
+
+function editableMetaField(field, value, placeholder, iconHTML) {
+  if (editingField === field) {
+    return `
+      <div class="meta-item editable-field meta-editing">
+        ${iconHTML}
+        <input class="field-input" data-edit-field="${field}" value="${escHTML(value || "")}" placeholder="${escHTML(placeholder)}" />
+        ${saveFieldButton(field)}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="meta-item editable-field">
+      ${iconHTML}
+      <span class="editable-value">${escHTML(value || placeholder)}</span>
+      ${editFieldButton(field)}
+    </div>
+  `;
+}
+
+function editFieldButton(field) {
+  return `
+    <button class="field-edit-btn" type="button" data-action="edit-field" data-field="${field}" aria-label="Edit ${escHTML(field)}">
+      Edit
+    </button>
+  `;
+}
+
+function saveFieldButton(field) {
+  return `
+    <button class="field-save-btn" type="button" data-action="save-field" data-field="${field}" aria-label="Save ${escHTML(field)}" title="Done">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </button>
+  `;
+}
+
+function handlePanelKeydown(event) {
+  const input = event.target.closest("[data-edit-field]");
+  if (!input) return;
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    saveEditedField(input.dataset.editField);
+  } else if (event.key === "Escape") {
+    editingField = null;
+    renderSnapTab();
+  }
+}
+
+function saveEditedField(field) {
+  if (!jobInfo) return;
+  const input = document.querySelector(`[data-edit-field="${field}"]`);
+  if (!input) return;
+
+  jobInfo[field] = input.value.trim();
+  editingField = null;
+
+  chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+    if (tab) {
+      chrome.tabs.sendMessage(tab.id, {
+        action: "updateJobInfo",
+        field,
+        value: jobInfo[field],
+      });
+    }
+  });
+
+  renderSnapTab();
+  showToast("Field updated");
+}
+
 function escHTML(str) {
-  if (!str) return "";
-  return str
+  if (str === null || str === undefined) return "";
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

@@ -19,7 +19,7 @@ class GreenhouseScraper extends JobScraper {
       this.document.querySelector("h1")?.innerText.trim() ||
       this.document.querySelector(".opening-title")?.innerText.trim() ||
       this.document.title ||
-      null
+      ""
     );
   }
 
@@ -28,7 +28,7 @@ class GreenhouseScraper extends JobScraper {
 
   getCompany() {
     return (
-      this.extractLogoAltCompanyText() || this.extractCompanyFromURL() || null
+      this.extractLogoAltCompanyText() || this.extractCompanyFromURL() || ""
     );
   }
 
@@ -37,15 +37,15 @@ class GreenhouseScraper extends JobScraper {
     const container = this.document.querySelector(
       "div.job-post-container div.image-container",
     );
-    if (!container) return null;
+    if (!container) return "";
 
     const img = container.querySelector("img");
-    if (!img) return null;
+    if (!img) return "";
 
     const alt = (img.getAttribute("alt") || "").trim();
-    if (!alt) return null;
+    if (!alt) return "";
 
-    return alt.replace(/\s*Logo$/, "").trim() || null;
+    return alt.replace(/\s*Logo$/, "").trim() || "";
   }
 
   /* Fallback method for company if company logo is not available in job posting. */
@@ -54,7 +54,7 @@ class GreenhouseScraper extends JobScraper {
     if (pathnameParts.length && pathnameParts[0] !== "jobs") {
       return decodeURIComponent(pathnameParts[0]).replace(/-/g, " ");
     }
-    return null;
+    return "";
   }
 
   /**
@@ -66,12 +66,12 @@ class GreenhouseScraper extends JobScraper {
    */
   getSalary() {
     const payEl = this.document.querySelector(".pay-range");
-    if (!payEl) return null;
+    if (!payEl) return "";
 
     const paragraph =
       payEl.querySelector("p.body:not(.body--medium)") ||
       payEl.querySelector("p.body");
-    return paragraph ? paragraph.innerText.trim() : null;
+    return paragraph ? paragraph.innerText.trim() : "";
   }
 
   /* -------------- LOCATION EXTRACTION --------------
@@ -81,7 +81,7 @@ class GreenhouseScraper extends JobScraper {
       this.document.querySelector('[class*="location"]')?.innerText.trim() ||
       this.document.querySelector(".location")?.innerText.trim() ||
       this.document.querySelector(".job-location")?.innerText.trim() ||
-      null
+      ""
     );
   }
 }
