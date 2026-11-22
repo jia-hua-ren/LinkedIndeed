@@ -319,6 +319,8 @@ function handlePanelClick(event) {
     case "edit-field":
       editingField = actionEl.dataset.field;
       renderSnapTab();
+      // necessary to perform edit and focusing on the field, could consider just not using it
+      // but might be clunky. GPT suggested this
       requestAnimationFrame(() => {
         const input = document.querySelector(
           `[data-edit-field="${editingField}"]`,
