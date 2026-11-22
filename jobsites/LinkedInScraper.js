@@ -22,14 +22,14 @@ class LinkedInScraper extends JobScraper {
   }
 
   getTitle() {
-    return this.extractTitleAndCompanyFromTitleTag().title || null;
+    return this.extractTitleAndCompanyFromTitleTag().title || "";
   }
 
   getCompany() {
     return (
       this.extractTitleAndCompanyFromTitleTag().company ||
       this.extractCompanyFromJobPage() ||
-      null
+      ""
     );
   }
 
@@ -37,20 +37,28 @@ class LinkedInScraper extends JobScraper {
    * The salary of the job is not always present, but if it is present, it is in a <a> element that has
    * an href that directs to the current, same URL to the current job post (weird). So this finds all <a>'s
    * that match the criteria and looks for one whose innerText contains a number.
+   *
+   * also checks for aria-disabled="false" because there are other a tags with
+   * the same href property but they are company photos, just a waste of time to process through when they definitely
+   * don't contain the salary.
    */
   getSalary() {
     const currentRawUrl = location.href;
     const salaryLinks = [
-      ...this.document.querySelectorAll(`a[href="${currentRawUrl}"]`),
+      ...this.document.querySelectorAll(
+        `a[href="${currentRawUrl}"][aria-disabled="false"]`,
+      ),
     ].filter((link) => {
-      const text = (link.innerText || "").trim();
+      console.log(link);
+      const text = link?.innerText?.trim();
       return text && /\d/.test(text);
     });
 
-    if (!salaryLinks.length) return null;
+    if (!salaryLinks.length) return "";
 
-    const text = (salaryLinks[0].innerText || "").trim();
-    return text || null;
+    // checked for null, safe to do this operation
+    const text = salaryLinks[0].innerText?.trim();
+    return text || "";
   }
 
   /** after doing light testing, the p that matches the description is the 5th one,
@@ -66,13 +74,13 @@ class LinkedInScraper extends JobScraper {
           [...paragraph.children].every((child) => child.tagName === "SPAN"),
       );
 
-    if (!p) return null;
+    if (!p) return "";
 
     const firstSpan = p.querySelector("span");
-    if (!firstSpan) return null;
-
-    const text = (firstSpan.innerText || "").trim();
-    return text || null;
+    if (!firstSpan) return "";
+    // checked for null, safe to do this operation
+    const text = firstSpan.innerText?.trim();
+    return text || "";
   }
 
   /** The specific job site's title will always be a form of Job Title | Company Name | LinkedIn.
@@ -86,17 +94,17 @@ class LinkedInScraper extends JobScraper {
       .filter(Boolean);
 
     if (parts.length < 3) {
-      return { title: null, company: null };
+      return { title: "", company: "" };
     }
 
     const lastPart = parts[parts.length - 1];
     if (lastPart !== "LinkedIn") {
-      return { title: null, company: null };
+      return { title: "", company: "" };
     }
 
     return {
-      title: parts[0] || null,
-      company: parts[1] || null,
+      title: parts[0] || "",
+      company: parts[1] || "",
     };
   }
 
@@ -107,7 +115,7 @@ class LinkedInScraper extends JobScraper {
     const companyEl = this.document.querySelector(
       'div[aria-label^="Company, "]',
     );
-    if (!companyEl) return null;
+    if (!companyEl) return "";
 
     const label = companyEl.getAttribute("aria-label") || "";
     const name = label
@@ -115,6 +123,6 @@ class LinkedInScraper extends JobScraper {
       .trim()
       .replace(/\.$/, "");
 
-    return name || null;
+    return name || "";
   }
 }

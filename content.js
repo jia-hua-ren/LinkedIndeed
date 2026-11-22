@@ -30,6 +30,7 @@
       break;
   }
 
+  // the field of the job : the value of the job
   const editedJobFields = {};
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
