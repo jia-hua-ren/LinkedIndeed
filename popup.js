@@ -185,44 +185,24 @@ function renderSnapTab() {
     return;
   }
 
-  // TODO: rewrite JobScraper to return empty string instead of null, so that
-  // we can just have one editableMetaField line with just one variable
-  // rather than a ternary operator
-
   const { site, title, company, location, salary, cleanUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
 
-  const locationHTML = location
-    ? editableMetaField(
-        "location",
-        location,
-        "Location",
-        `
+  const locationHTML = editableMetaField(
+    "location",
+    location,
+    "Location",
+    `
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
-      )
-    : editableMetaField(
-        "location",
-        "",
-        "Location",
-        `
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
-      );
+  );
 
-  const salaryHTML = salary
-    ? editableMetaField(
-        "salary",
-        salary,
-        "Salary",
-        `
+  const salaryHTML = editableMetaField(
+    "salary",
+    salary,
+    "Salary",
+    `
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-      )
-    : editableMetaField(
-        "salary",
-        "",
-        "Salary",
-        `
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-      );
+  );
 
   const snapHtml = `
     <div id="snapView">
