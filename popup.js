@@ -105,13 +105,30 @@ async function loadCurrentJob() {
 }
 
 // ── Render States ─────────────────────────────────────────────────────────────
+/**
+ *
+ * @param {string} activeTab - the tab that should be active
+ * @returns the HTML text of the tabs, with the correct activeTab.
+ */
+function renderTabs(activeTab) {
+  return `
+    <div class="tabs">
+      <div class="tab ${activeTab === "snap" ? "active" : ""}"
+           data-action="switch-tab" data-tab="snap">
+        Snap
+      </div>
+      <div class="tab ${activeTab === "settings" ? "active" : ""}"
+           data-action="switch-tab" data-tab="settings">
+        Settings
+      </div>
+    </div>
+  `;
+}
 
 function renderUnsupported() {
-  setPanel(`
-    <div class="tabs">
-      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
-      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
-    </div>
+  setPanel(
+    renderTabs("snap") +
+      `
     <div class="unsupported">
       <div class="unsupported-icon">🔍</div>
       <h3>Not a supported job site</h3>
@@ -122,20 +139,20 @@ function renderUnsupported() {
           .join("")}
       </div>
     </div>
-  `);
+  `,
+  );
 }
 
 function renderNotAJobPage() {
-  setPanel(`
-    <div class="tabs">
-      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
-      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
-    </div>
+  setPanel(
+    renderTabs("snap") +
+      `
     <div class="unsupported">
       <h3>Please open a job post directly</h3>
       <p>Happy Job Applying! From a listings page, Ctrl/Cmd-click the job or right-click and open it in a new tab.</p>
     </div>
-  `);
+  `,
+  );
 }
 
 /**
@@ -145,13 +162,6 @@ function renderNotAJobPage() {
  *
  */
 function renderSnapTab() {
-  const tabs = `
-    <div class="tabs">
-      <div class="tab active" data-action="switch-tab" data-tab="snap">Snap</div>
-      <div class="tab" data-action="switch-tab" data-tab="settings">Settings</div>
-    </div>
-  `;
-
   if (!jobInfo) {
     if (pageMode === "unsupported-site") {
       renderUnsupported();
@@ -170,7 +180,7 @@ function renderSnapTab() {
      */
 
     setPanel(
-      tabs +
+      renderTabs("snap") +
         `
     <div class="errorunknown">
       <h3>Error please reload extension</h3>
@@ -225,7 +235,59 @@ function renderSnapTab() {
     </div>
   `;
 
-  setPanel(tabs + snapHtml);
+  setPanel(renderTabs("snap") + snapHtml);
+}
+
+function renderSettingsTab() {
+  const cols = excelColumns.length ? excelColumns : DEFAULT_COLUMNS;
+
+  const rowsHtml = cols
+    .map((c, idx) => {
+      const isDate = c === "date";
+      const currentFormat = dateFormats[idx] || "MM/DD/YYYY";
+      const inlineMoreBtnHtml = isDate
+        ? `<button class="icon-btn more" data-action="toggle-date-more" data-index="${idx}" style="margin-left:6px;">more...</button>`
+        : "";
+      const dateOptionsHtml = isDate
+        ? `
+          <div class="date-options" data-index="${idx}" style="display:none; margin-top:6px;">
+            <label style="font-size:12px; color:var(--muted); margin-bottom:6px; display:block;">Date format. This is Today's date.</label>
+            <select data-action="date-format-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
+              ${DATE_FORMAT_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === currentFormat ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
+          </div>
+        `
+        : "";
+
+      return `
+      <div class="setting-row" data-index="${idx}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-direction:column; align-items:stretch;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div style="flex:1; min-width:0;">
+            <select data-action="col-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
+              ${COLUMN_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === c ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
+          </div>
+          ${inlineMoreBtnHtml}
+          <button class="icon-btn del" data-action="remove-col" data-index="${idx}" style="margin-left:4px;">Remove</button>
+        </div>
+        ${dateOptionsHtml}
+      </div>
+    `;
+    })
+    .join("");
+
+  const settingsHtml = `
+    <div id="settingsView">
+      <div style="margin-bottom:10px; color:var(--muted); font-size:12px;">Configure the columns for Excel/Sheets export. Use "(Blank)" to insert an empty column.</div>
+      <div id="colsList">${rowsHtml}</div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="icon-btn" data-action="add-col">Add Column</button>
+        <button class="save-btn" data-action="save-settings">Save Settings</button>
+      </div>
+    </div>
+  `;
+
+  setPanel(renderTabs("settings") + settingsHtml);
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -280,13 +342,11 @@ function handlePanelClick(event) {
       copyExcel();
       break;
     case "switch-tab":
-      const tab = actionEl.dataset.tab;
-      if (tab === "settings") renderSettingsTab();
-      else renderSnapTab();
-      // update active class on tabs
-      document
-        .querySelectorAll(".tab")
-        .forEach((t) => t.classList.toggle("active", t.dataset.tab === tab));
+      if (actionEl.dataset.tab === "settings") {
+        renderSettingsTab();
+      } else {
+        renderSnapTab();
+      }
       break;
     case "toggle-date-more":
       const di = parseInt(actionEl.dataset.index, 10);
@@ -443,64 +503,6 @@ function escHTML(str) {
 }
 
 // --- Settings / Excel helpers ---
-function renderSettingsTab() {
-  const cols = excelColumns.length ? excelColumns : DEFAULT_COLUMNS;
-
-  const rowsHtml = cols
-    .map((c, idx) => {
-      const isDate = c === "date";
-      const currentFormat = dateFormats[idx] || "MM/DD/YYYY";
-      const inlineMoreBtnHtml = isDate
-        ? `<button class="icon-btn more" data-action="toggle-date-more" data-index="${idx}" style="margin-left:6px;">more...</button>`
-        : "";
-      const dateOptionsHtml = isDate
-        ? `
-          <div class="date-options" data-index="${idx}" style="display:none; margin-top:6px;">
-            <label style="font-size:12px; color:var(--muted); margin-bottom:6px; display:block;">Date format. This is Today's date.</label>
-            <select data-action="date-format-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
-              ${DATE_FORMAT_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === currentFormat ? "selected" : ""}>${o.label}</option>`).join("")}
-            </select>
-          </div>
-        `
-        : "";
-
-      return `
-      <div class="setting-row" data-index="${idx}" style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-direction:column; align-items:stretch;">
-        <div style="display:flex; gap:8px; align-items:center;">
-          <div style="flex:1; min-width:0;">
-            <select data-action="col-change" data-index="${idx}" style="width:100%; padding:6px; border-radius:6px; background:transparent; border:1px solid var(--border); color:var(--text);">
-              ${COLUMN_OPTIONS.map((o) => `<option value="${o.val}" ${o.val === c ? "selected" : ""}>${o.label}</option>`).join("")}
-            </select>
-          </div>
-          ${inlineMoreBtnHtml}
-          <button class="icon-btn del" data-action="remove-col" data-index="${idx}" style="margin-left:4px;">Remove</button>
-        </div>
-        ${dateOptionsHtml}
-      </div>
-    `;
-    })
-    .join("");
-
-  const settingsHtml = `
-    <div id="settingsView">
-      <div style="margin-bottom:10px; color:var(--muted); font-size:12px;">Configure the columns for Excel/Sheets export. Use "(Blank)" to insert an empty column.</div>
-      <div id="colsList">${rowsHtml}</div>
-      <div style="display:flex; gap:8px; margin-top:10px;">
-        <button class="icon-btn" data-action="add-col">Add Column</button>
-        <button class="save-btn" data-action="save-settings">Save Settings</button>
-      </div>
-    </div>
-  `;
-
-  const tabs = `
-    <div class="tabs">
-      <div class="tab" data-action="switch-tab" data-tab="snap">Snap</div>
-      <div class="tab active" data-action="switch-tab" data-tab="settings">Settings</div>
-    </div>
-  `;
-
-  setPanel(tabs + settingsHtml);
-}
 
 function copyExcel() {
   if (!excelColumnsSet) {
