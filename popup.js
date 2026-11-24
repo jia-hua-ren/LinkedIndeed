@@ -155,6 +155,11 @@ function renderNotAJobPage() {
   );
 }
 
+const MetaIconHTML = {
+  salary: `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
+  location: ` <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
+};
+
 /**
  * Render the main "Snap" tab with job info and actions, based on the `jobInfo` object
  * retrieved from the content script.
@@ -198,28 +203,16 @@ function renderSnapTab() {
   const { site, title, company, location, salary, cleanUrl } = jobInfo;
   const label = SITE_LABELS[site] || site;
 
-  const locationHTML = editableMetaField(
-    "location",
-    location,
-    "Location",
-    `
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`,
-  );
-
-  const salaryHTML = editableMetaField(
-    "salary",
-    salary,
-    "Salary",
-    `
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>`,
-  );
+  const locationHTML = editableField("location", location, "Location...");
+  const salaryHTML = editableField("salary", salary, "Salary...");
 
   const snapHtml = `
     <div id="snapView">
       <div class="job-card">
         <div class="site-badge">${escHTML(label)}</div>
-        ${editableTextField("title", title, "Job Title Unknown", "job-title")}
-        ${editableTextField("company", company, "Company Unknown", "job-company")}
+        ${editableField("title", title, "Job Title...")}
+        ${editableField("company", company, "Company Name...")}
+
         <div class="job-meta">
           ${locationHTML}
           ${salaryHTML}
@@ -396,7 +389,11 @@ function handlePanelClick(event) {
       break;
   }
 }
-
+/**
+ * A simple toast window function to show ``msg`` on the extension page. Writes ``msg`` into the element with the ID ``toast``. Disappears after a delay of 2000ms.
+ *
+ * @param {string} msg - The toast message to show on screen
+ */
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -404,39 +401,50 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2000);
 }
 
-function editableTextField(field, value, placeholder, className) {
+// ------EDITABLE FIELDS FUNCTIONS--------- //
+/**
+ * This function returns the editable field's HTML. Based on the current ``editingField`` variable, it will display either an input box with the current value
+ * or just the current value (no edit). Depending on the type of field (i.e. meta or non-meta), it applies the appropriate CSS style classes. The type of field is determined
+ * based on the ``field`` parameter and whether it exists inside the ``MetaIconHTML`` object/dict.
+ *
+ * @param {string} field - the name of the field that is editable - must match an entry of ``jobInfo``.
+ * @param {string} value - the value that is being edited, retrieved from current ``jobInfo`` object.
+ * @param {string} placeholder - the default placeholder for the field when empty
+ * @returns {string} HTML - the editable field's HTML element in string.
+ */
+function editableField(field, value, placeholder) {
+  const displayValue = value || placeholder;
+  const className = "job-" + field;
+
+  // Check to see if the current field is a meta field by seeing if there is an icon,
+  // which only exists for meta fields.
+  const isMeta = Object.hasOwn(MetaIconHTML, field);
+
   if (editingField === field) {
+    // determine the classes this field has. Either it is a meta item, which needs meta-editing and meta-item class,
+    // or it is a non-meta info item, which requires text-editing and the associated CSS class (aka the field parameter)
+    const allClasses = isMeta
+      ? "meta-editing meta-item"
+      : `text-editing ${className} `;
     return `
-      <div class="editable-field text-editing ${className}">
-        <input class="field-input" data-edit-field="${field}" value="${escHTML(value || "")}" placeholder="${escHTML(placeholder)}" />
+      <div class="editable-field ${allClasses}">
+        ${isMeta ? MetaIconHTML[field] : ""}
+        <input
+          class="field-input"
+          data-edit-field="${field}"
+          value="${escHTML(value || "")}"
+          placeholder="${escHTML(placeholder)}"
+        />
         ${saveFieldButton(field)}
       </div>
     `;
   }
 
   return `
-    <div class="editable-field ${className}">
-      <span class="editable-value">${escHTML(value || placeholder)}</span>
-      ${editFieldButton(field)}
-    </div>
-  `;
-}
+    <div class="editable-field ${isMeta ? "meta-item" : className}">
+      ${isMeta ? MetaIconHTML[field] : ""}
 
-function editableMetaField(field, value, placeholder, iconHTML) {
-  if (editingField === field) {
-    return `
-      <div class="meta-item editable-field meta-editing">
-        ${iconHTML}
-        <input class="field-input" data-edit-field="${field}" value="${escHTML(value || "")}" placeholder="${escHTML(placeholder)}" />
-        ${saveFieldButton(field)}
-      </div>
-    `;
-  }
-
-  return `
-    <div class="meta-item editable-field">
-      ${iconHTML}
-      <span class="editable-value">${escHTML(value || placeholder)}</span>
+      <span class="editable-value">${escHTML(displayValue)}</span>
       ${editFieldButton(field)}
     </div>
   `;
