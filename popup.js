@@ -518,26 +518,21 @@ function copyExcel() {
     return;
   }
   if (!jobInfo) return;
+
+  const FIELD_MAP = {
+    company: "company",
+    title: "title",
+    location: "location",
+    salary: "salary",
+    cleanUrl: "cleanUrl",
+  };
+
   const mapField = (key, idx) => {
-    if (!key || key === "blank") return "";
-    switch (key) {
-      case "company":
-        return jobInfo.company || "";
-      case "title":
-        return jobInfo.title || "";
-      case "location":
-        return jobInfo.location || "";
-      case "salary":
-        return jobInfo.salary || "";
-      case "cleanUrl":
-        return jobInfo.cleanUrl || "";
-      case "date": {
-        const fmt = dateFormats[idx] || "MM/DD/YYYY";
-        return formatDate(new Date(), fmt);
-      }
-      default:
-        return "";
+    if (key === "date") {
+      return formatDate(new Date(), dateFormats[idx] || "MM/DD/YYYY");
     }
+
+    return jobInfo[FIELD_MAP[key]] || "";
   };
 
   const row = excelColumns.map((k, i) => mapField(k, i)).join("\t");
