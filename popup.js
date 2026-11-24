@@ -125,6 +125,16 @@ function renderTabs(activeTab) {
   `;
 }
 
+function renderSupportedSites() {
+  return `
+    <div class="supported-sites">
+      ${Object.values(SITE_LABELS)
+        .map((label) => `<span class="site-chip">${escHTML(label)}</span>`)
+        .join("")}
+    </div>
+  `;
+}
+
 function renderUnsupported() {
   setPanel(
     renderTabs("snap") +
@@ -133,11 +143,7 @@ function renderUnsupported() {
       <div class="unsupported-icon">🔍</div>
       <h3>Not a supported job site</h3>
       <p>Navigate to a job listing on one of these sites to use Linked, Indeed!:</p>
-      <div class="supported-sites">
-        ${Object.entries(SITE_LABELS)
-          .map(([, label]) => `<span class="site-chip">${label}</span>`)
-          .join("")}
-      </div>
+      ${renderSupportedSites()}
     </div>
   `,
   );
@@ -189,11 +195,7 @@ function renderSnapTab() {
         `
     <div class="errorunknown">
       <h3>Error please reload extension</h3>
-      <div class="supported-sites">
-        ${Object.entries(SITE_LABELS)
-          .map(([, label]) => `<span class="site-chip">${label}</span>`)
-          .join("")}
-      </div>
+      ${renderSupportedSites()}
     </div>
   `,
     );
